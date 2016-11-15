@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="UTF-8">
+		
+		<!-- P5 libraries -->
+		<script language="javascript" type="text/javascript" src="libraries/p5.js"></script>
+		<script language="javascript" type="text/javascript" src="libraries/p5.dom.js"></script>
+		
+		<!-- A-Frame libraries -->
+		<script language="javascript" type="text/javascript" src="libraries/aframe.min.js"></script>
+
+		<!-- AFrameP5 library -->
+		<script language="javascript" type="text/javascript" src="libraries/aframep5.js"></script>
+
+		<!-- P5 Sketch -->
+		<script language="javascript" type="text/javascript" src="sketch.js"></script>
+		
+		<!-- custom styles -->
+		<style> 
+			body {
+				padding: 0; 
+				margin: 0;
+			} 
+		</style>
+	</head>
+	<body>
+		
+		<!-- container to hold our VR scene - make sure to give this element an ID of 'VRScene' -->	
+	    <a-scene id="VRScene" ">
+	      <a-sky src = "images/black.jpg"></a-sky>
+
+	    	<!-- 
+		       The 'a-assets' container is used to load in any external artwork you may want to use as "textures" for your objects.
+		       Ensure that this element has an ID of 'VRAssets'
+		       
+		       Textures can be loaded by creating a new 'a-asset' tag inside of the 'a-assets' container.
+		       When doing this you will need to make sure to give your textures a unique ID - 
+		       this will be used by p5 to create new objects.
+		       
+		       Example:
+		       
+		       <img id="ITEM_ID_GOES_HERE" src="images/gold_block.png"></asset-item>		       
+			-->
+	      
+			<a-assets id="VRAssets">
+				
+
+			</a-assets>
+			 
+			  
+	    </a-scene>		
+		
+	</body>
+</html>
