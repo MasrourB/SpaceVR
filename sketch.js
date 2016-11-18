@@ -1,6 +1,6 @@
 // variable to hold a reference to our A-Frame world
 var world;
-
+var universe = '#'
 function setup() {
 	// no canvas needed
 	noCanvas();
@@ -15,13 +15,14 @@ function setup() {
 	
 	// what textures can we choose from?
 	var textures = ['iron', 'gold', 'stone'];
-	
+
 	// create lots of boxes
 	for (var i = 0; i < 350; i++) {
+
 		// pick a location
-		var x = random(-100, 100);
-		var y = random(-100,100);
-		var z = random(-100, 100);
+		var x = random(-random(2000), random(2000));
+		var y = random(-random(2000),random(2000));
+		var z = random(-random(2000), random(2000));
 		
 		// pick a random texture
 		var t = textures[ int(random(textures.length)) ];
@@ -34,10 +35,11 @@ function setup() {
 							x:x,
 							y:y,
 							z:z,
-							asset:t,
+							radius: 3.5,
+						// 	red: random(255), green: random(255), blue: random(255),
 							clickFunction: function(theBox) {
 								// update color
-								theBox.setColor( random(255), random(255), random(255) );
+							
 								
 								// move the user toward this box over a 2 second period
 								// (time is expressed in milliseconds)
@@ -49,13 +51,6 @@ function setup() {
 		world.add(b);
 	}
 	
-	
-	
-	// create a bunch of boxes in the sky as well
-	
-	
-	
-		
 		
 }
 
@@ -63,6 +58,25 @@ function setup() {
 var scaleChange = 0.01;
 
 function draw() {
-
+  if (mouseIsPressed || touchIsDown) {
+		world.moveUserForward(1);
+	}
+	// step 1: get the user's position
+	// this is an object with three properties (x, y and z)
+	var pos = world.getUserPosition();
+	
+	// now evaluate
+	if (pos.x > 5000) {
+		world.setUserPosition(-5000, pos.y, pos.z);
+	}
+	else if (pos.x < -5000) {
+		world.setUserPosition(5000, pos.y, pos.z);
+	}
+	if (pos.z > 5000) {
+		world.setUserPosition(pos.x, pos.y, -5000);
+	}
+	else if (pos.z < -5000) {
+		world.setUserPosition(pos.x, pos.y, 5000);
+	}
 	
 }
