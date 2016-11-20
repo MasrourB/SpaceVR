@@ -1,31 +1,40 @@
 // variable to hold a reference to our A-Frame world
 var world;
 var universe = '#'
+var planets = [];
 function setup() {
+  
 	// no canvas needed
 	noCanvas();
 	
 	// construct the A-Frame world
 	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
+	world.setFlying(true);
 	
 	// now that we have a world we can add elements to it using a series of wrapper classes
 	// these classes are discussed in greater detail on the A-Frame P5 documentation site
 	// http://cs.nyu.edu/~kapp/courses/cs0380fall2016/aframep5.php
 	
 	// what textures can we choose from?
-	var textures = ['iron', 'gold', 'stone'];
-
+	//var textures = ['iron', 'gold', 'stone'];
+  
 	// create lots of boxes
-	for (var i = 0; i < 350; i++) {
+	for (var i = 0; i < 10; i++) {
+	  
 
 		// pick a location
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
 		var z = random(-random(2000), random(2000));
 		
+		var container = new Container3D({x:x, y:y, z:z});
+	
+	// add the container to the world
+	world.add(container);
+		
 		// pick a random texture
-		var t = textures[ int(random(textures.length)) ];
+		//var t = textures[ int(random(textures.length)) ];
 		
 		// create a box here
 		// note the inclusion of a 'clickFunction' property - this function will be invoked
@@ -36,7 +45,9 @@ function setup() {
 							y:y,
 							z:z,
 							radius: 3.5,
-						// 	red: random(255), green: random(255), blue: random(255),
+							rotationY: random(360),
+							red: random(255), green: random(255), blue: random(255),
+						/*
 							clickFunction: function(theBox) {
 								// update color
 							
@@ -45,10 +56,18 @@ function setup() {
 								// (time is expressed in milliseconds)
 								world.slideToObject( theBox, 2000 );
 							}
+							*/
 		});
 		
+		  	var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
+		  	container.addChild(myDAE);
+  //world.add(myDAE);
+		
+		
+		container.addChild(b);
+	planets.push(container);
 		// add the box to the world
-		world.add(b);
+		//world.add(b);
 	}
 	
 		
@@ -60,6 +79,11 @@ var scaleChange = 0.01;
 function draw() {
   if (mouseIsPressed || touchIsDown) {
 		world.moveUserForward(1);
+		//var pos = world.getUserPosition();
+		//world.setUserPosition(pos.x,pos.y+1,pos.z)
+	}
+	for(var i = 0; i<planets.length;i++){
+	 planets[i].spinY(1);
 	}
 	// step 1: get the user's position
 	// this is an object with three properties (x, y and z)
