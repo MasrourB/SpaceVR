@@ -1,8 +1,14 @@
 // variable to hold a reference to our A-Frame world
 var world;
+var acceleration = 0.01;
+var velocity = 0;
 
 var universe = '#';
 var planets = [];
+var ship;
+
+var gameState = 0;
+
 function setup() {
 
 	// no canvas needed
@@ -14,15 +20,7 @@ function setup() {
 
 	world.setFlying(true);
 
-	// now that we have a world we can add elements to it using a series of wrapper classes
-	// these classes are discussed in greater detail on the A-Frame P5 documentation site
-	// http://cs.nyu.edu/~kapp/courses/cs0380fall2016/aframep5.php
-
-	// what textures can we choose from?
-	//var textures = ['iron', 'gold', 'stone'];
-
-	// create lots of boxes
-	for (var i = 0; i < 10; i++) {
+	for (var i = 0; i < 50; i++) {
 
 
 		// pick a location
@@ -31,23 +29,18 @@ function setup() {
 		var z = random(-random(2000), random(2000));
 
 		var container = new Container3D({x:x, y:y, z:z});
+		var planet = new Planet(x,y,z);
 
 	// add the container to the world
-	world.add(container);
-
-		// pick a random texture
-		//var t = textures[ int(random(textures.length)) ];
-
-		// create a box here
-		// note the inclusion of a 'clickFunction' property - this function will be invoked
-		// every time this box is clicked on.  note that the function accepts a single argument
-		// -- this is a reference to the box that was clicked (essentially the entity itself)
+	world.add(planet.container);
+	
+	
 		var b = new Sphere({
 							x:x,
 							y:y,
 							z:z,
-							radius: 10,
-							rotationY: random(360),
+							radius: 20,
+							
 							red: random(255), green: random(255), blue: random(255),
 						/*
 							clickFunction: function(theBox) {
@@ -61,32 +54,32 @@ function setup() {
 							*/
 		});
 
-
-		  	var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
-		  	container.addChild(myDAE);
-  //world.add(myDAE);
-
-
-		container.addChild(b);
-	planets.push(container);
+        if(i <10){
+          var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
+		  	
+		  	
+		  	planet.addLife('model1');
+          
+        }
+		  	
+		  	planet.addObj(b);
+		  	
+		  	
+	planets.push(planet);
 		// add the box to the world
 		//world.add(b);
 	}
 
-
+  ship = new Ship()
 }
 
-// keep track of how much to change scale by
-var scaleChange = 0.01;
+
 
 function draw() {
-  if (mouseIsPressed || touchIsDown) {
-		world.moveUserForward(1);
-		//var pos = world.getUserPosition();
-		//world.setUserPosition(pos.x,pos.y+1,pos.z)
-	}
+  ship.move();
+  //ship.interact(planets);
 	for(var i = 0; i<planets.length;i++){
-	 planets[i].spinY(1);
+	 planets[i].calculateDistance();
 	}
 	// step 1: get the user's position
 	// this is an object with three properties (x, y and z)
@@ -107,3 +100,98 @@ function draw() {
 	}
 
 }
+
+
+
+
+function Ship(){
+  this.acceleration = 0.01;
+  this.velocity = 0;
+  this.pos = world.getUserPosition();
+  
+  this.x = this.pos.x;
+  this.y = this.pos.y;
+  this.z = this.pos.z;
+  
+  this.move = function(){
+    if (mouseIsPressed || touchIsDown) {
+      if(this.velocity < 3){
+        this.velocity += this.acceleration;
+      }
+      
+		//var pos = world.getUserPosition();
+		//world.setUserPosition(pos.x,pos.y+1,pos.z)
+	  }
+	world.moveUserForward(this.velocity);
+  }
+  
+  
+}
+
+function Planet(xPos,yPos,zPos){
+  this.x = xPos;
+  this.y = yPos;
+  this.z = zPos;
+  this.inhabitants = [];
+  this.containsLife = false;
+  this.distanceToShip;
+  
+  this.world;
+  
+  this.container = new Container3D({x:this.x, y:this.y, z:this.z});
+  
+  this.body = new Sphere({
+    x:this.x,
+    y:this.y,
+    z:this.z,
+    radius:10
+  });
+  
+  this.addObj = function(obj){
+    this.container.addChild(obj);
+  }
+  
+  this.addLife = function(modelName){
+    var myDAE = new DAE({asset:modelName, x:xPos+30, y:yPos+30,z:zPos+30});
+    this.inhabitants.push(myDAE);
+		  	this.container.addChild(myDAE);
+    
+  }
+  
+  this.generateWorld = function(){
+    //this.world = new World('VRScene');
+    world.setFlying(false);
+  var g = new Plane({
+						x:this.x, y:this.y, z:this.z, 
+						width:100, height:100,
+						//asset:'rock',
+						repeatX: 100,
+						repeatY: 100,
+						rotationX:-90
+					   });
+  world.add(g);
+}
+ 
+ //Code to check if the user is close enough to enter a planet 
+  this.calculateDistance = function(){
+    var pos = world.getUserPosition();
+    var distance = dist(this.x,this.y,this.z,pos.x,pos.y,pos.z)
+    
+    this.distance = distance;
+    
+    if(this.distance < 25 && world.getFlying()){
+      console.log("world")
+      this.generateWorld();
+        //gameState = 1;
+        ship.velocity = 0;
+    }
+    
+  }
+  
+  this.spin = function(){
+    this.inhabitants[0].spinY(1);
+  }
+  
+  
+}
+
