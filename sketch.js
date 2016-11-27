@@ -27,9 +27,13 @@ function setup() {
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
 		var z = random(-random(2000), random(2000));
+		
+		var r = random(255);
+		var g = random(255);
+		var b = random(255);
 
 		var container = new Container3D({x:x, y:y, z:z});
-		var planet = new Planet(x,y,z);
+		var planet = new Planet(x,y,z,r,g,b);
 
 	// add the container to the world
 	world.add(planet.container);
@@ -41,7 +45,7 @@ function setup() {
 							z:z,
 							radius: 20,
 							
-							red: random(255), green: random(255), blue: random(255),
+							red: r, green: g, blue: b,
 						/*
 							clickFunction: function(theBox) {
 								// update color
@@ -128,13 +132,19 @@ function Ship(){
   
 }
 
-function Planet(xPos,yPos,zPos){
+function Planet(xPos,yPos,zPos,r,g,b){
   this.x = xPos;
   this.y = yPos;
   this.z = zPos;
   this.inhabitants = [];
   this.containsLife = false;
   this.distanceToShip;
+  
+  this.r = r;
+  this.g = g;
+  this.b = b;
+  
+  this.radius = random(0,30)
   
   this.world;
   
@@ -144,7 +154,7 @@ function Planet(xPos,yPos,zPos){
     x:this.x,
     y:this.y,
     z:this.z,
-    radius:10
+    radius:this.radius
   });
   
   this.addObj = function(obj){
@@ -163,7 +173,8 @@ function Planet(xPos,yPos,zPos){
     world.setFlying(false);
   var g = new Plane({
 						x:this.x, y:this.y, z:this.z, 
-						width:100, height:100,
+						width:this.radius*40, height:this.radius*40,
+						red:this.r,green:this.g,blue:this.b,
 						//asset:'rock',
 						repeatX: 100,
 						repeatY: 100,
