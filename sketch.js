@@ -26,7 +26,7 @@ var gameState = 0;
 
 function setup() {
 	// no canvas needed
-	createCanvas(1000,1000);
+	noCanvas();
 
 	// construct the A-Frame world
 	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
@@ -39,6 +39,13 @@ function setup() {
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
 		var z = random(-random(2000), random(2000));
+		
+		//make sure a planet isn't generate right next to the user 
+    while((x < 100 && x > -100) || (y < 100 && y > -100) || (z < 100 && z > -100)){
+      x = random(-random(2000), random(2000));
+      y = random(-random(2000),random(2000));
+      z = random(-random(2000), random(2000));  
+    }
 		
 		var r = random(255);
 		var g = random(255);
@@ -144,6 +151,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.inhabitants = [];
   this.containsLife = false;
   this.onPlanet = false; 
+  this.plane; 
   
   this.r = r;
   this.g = g;
@@ -177,8 +185,9 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.generateWorld = function(){
     //this.world = new World('VRScene');
     console.log("SETTING UP WORLD");
+    this.onPlanet = true; 
     world.setFlying(false);
-    var g = new Plane({
+    this.plane = new Plane({
 						x:this.x, y:this.y, z:this.z, 
 						width:this.radius*40, height:this.radius*40,
 						red:this.r,green:this.g,blue:this.b,
@@ -187,9 +196,13 @@ function Planet(xPos,yPos,zPos,r,g,b){
 						repeatY: 100,
 						rotationX:-90
 					   });
-    world.add(g);
-
+    world.add(this.plane);
 }
+  this.removeWorld = function(plane){
+    this.onPlanet = false;
+    world.setFlying(true);
+    world.remove(this.plane);
+  }
  
   //Code to check if the user is close enough to enter a planet 
   this.calculateDistance = function(){
@@ -202,9 +215,11 @@ function Planet(xPos,yPos,zPos,r,g,b){
       if(this.containsLife){
         console.log("NEAR PLANET");
         ship.velocity = 0;
-        promptUser();
-        this.generateWorld();
+        promptUser(this);
+        this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
       }
+    }else if(this.onPlanet && this.distance > 200){ //remove plane when the user moves away from it 
+      this.removeWorld(this.plane);
     }
     
   }
@@ -217,10 +232,30 @@ function Planet(xPos,yPos,zPos,r,g,b){
 
 //prompt the user and ask them if they want to 'land' on the planet or not 
 //right now, they land whether or not they want to 
-function promptUser(){
+function promptUser(planet){
   console.log("prompting user");
-  textSize(20);
-  text("Land?", 500,500);
+  var x = planet.x;
+  var y = planet.y; 
+  var z = planet.z;
+  var radius = planet.radius; 
   
+  var questionContainer = new Container3D({
+    x:x + radius,
+    y:y + radius, 
+    z:z + radius, 
+  });
+  
+  //This is very buggy - sometimes the plane shows up, but facing away from the user
+  //and sometimes it doesn't show up at all, and the suer can't move
+  var landPlane = new Plane({
+    x: questionContainer.x,
+    y: questionContainer.y,
+    z: questionContainer.z,
+    width: 50,
+    height:50,
+    asset: 'land'
+  })
+  questionContainer.addChild(landPlane);
+  world.add(questionContainer); 
 }
 
