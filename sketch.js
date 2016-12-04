@@ -10,6 +10,7 @@
  * Loading 'alien' DAE model when you land on a planet. I guess if you get close enough to the alien you leave the planet 
  * Border recognition for leaving a planet - when the user exits the plane, the plane should revert back to a planet. 
  * Equirectangular image wraparound
+ * Get movement of lifeforms working 
  * 
  */
 
@@ -23,6 +24,12 @@ var planets = [];
 var ship;
 
 var gameState = 0;
+var onPlanet = false;
+var currentPlanet;
+
+var currentPosition;
+
+var lifeForms = [];
 
 function setup() {
 	// no canvas needed
@@ -34,7 +41,7 @@ function setup() {
 
 	world.setFlying(true);
 
-	for (var i = 0; i < 50; i++) {
+	for (var i = 0; i < 20; i++) {
 		// pick a location
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
@@ -76,11 +83,11 @@ function setup() {
   							*/
   		});
   
-      if(i <15){
+      if(i <40){
         var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
     	  planet.addLife('model1');
       }
-    	planet.addObj(b);
+    	planet.addObj(planet.body);
     	planets.push(planet);
     		// add the box to the world
     		//world.add(b);
@@ -100,6 +107,14 @@ function draw() {
 	// step 1: get the user's position
 	// this is an object with three properties (x, y and z)
 	var pos = world.getUserPosition();
+	currentPosition = pos;
+	
+	if(onPlanet){
+	  for(i =0; i< lifeForms.length;i++){
+	    lifeForms[i].move();
+	  }
+	  
+	}
 
 	// now evaluate
 	if (pos.x > 5000) {
@@ -130,7 +145,8 @@ function Ship(){
   this.z = this.pos.z;
   
   this.move = function(){
-    if (mouseIsPressed || touchIsDown) {
+    if(!onPlanet){
+      if (mouseIsPressed || touchIsDown) {
       if(this.velocity < 3){
         this.velocity += this.acceleration;
       }
@@ -139,9 +155,51 @@ function Ship(){
 		//world.setUserPosition(pos.x,pos.y+1,pos.z)
 	  }
 	  world.moveUserForward(this.velocity);
+      
+    }
+    else{
+      if(mouseIsPressed || touchIsDown){
+        world.moveUserForward(1);
+      }
+    }
+    
   }
   
   
+}
+
+function Alien(xPos,yPos,zPos,modelName){
+  this.x = xPos;
+  this.y = yPos;
+  this.z = zPos;
+  
+  this.xOffset = random(1000);
+	this.zOffset = random(2000, 3000);
+  
+  this.modelName = modelName;
+  
+  this.model = new DAE({asset:this.modelName, x:this.x, y:this.y,z:this.z});
+  
+  this.interact = function(){
+    var player = world.getUserPosition();
+    var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
+    if(distance <1){
+      
+      
+    }
+  }
+  //TODO: Get movement working by Perlin Noise here
+  this.move = function(){
+    
+    var xMovement = map( noise(this.xOffset), 0, 1, -0.005, 0.005);
+		var zMovement = map( noise(this.zOffset), 0, 1, -0.005, 0.005);
+		
+		this.xOffset += 0.01;
+		this.zOffset += 0.01;
+		
+		//this.model.nudge(xMovement,this.y,zMovement);
+    
+  }
 }
 
 function Planet(xPos,yPos,zPos,r,g,b){
@@ -157,7 +215,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.g = g;
   this.b = b;
   
-  this.radius = random(0,30)
+  this.radius = random(0,30);
+  this.size = random(50,80);
   
   this.world;
   
@@ -167,6 +226,9 @@ function Planet(xPos,yPos,zPos,r,g,b){
     x:this.x,
     y:this.y,
     z:this.z,
+    red:this.r,
+    green:this.g,
+    blue:this.b,
     radius:this.radius
   });
   
@@ -182,20 +244,40 @@ function Planet(xPos,yPos,zPos,r,g,b){
     
   }
   
+  this.displayLife = function(){
+    for(i = 0; i < this.inhabitants.length; i++){
+      var num = int(random(0,1));
+      var name = "";
+      if(num == 0){
+        name = "model1"
+      }
+      else{
+        name == "model2";
+      }
+      var myDAE = new Alien(this.x,this.y+2,this.z+10,name);
+      //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
+      world.add(myDAE.model)
+      lifeForms.push(myDAE)
+    }
+  }
+  
   this.generateWorld = function(){
     //this.world = new World('VRScene');
     console.log("SETTING UP WORLD");
+    onPlanet = true;
     this.onPlanet = true; 
     world.setFlying(false);
     this.plane = new Plane({
 						x:this.x, y:this.y, z:this.z, 
-						width:this.radius*40, height:this.radius*40,
+						width:200, height:200,
 						red:this.r,green:this.g,blue:this.b,
 						//asset:'rock',
 						repeatX: 100,
 						repeatY: 100,
 						rotationX:-90
 					   });
+					   
+		this.displayLife();
     world.add(this.plane);
 }
   this.removeWorld = function(plane){
@@ -216,6 +298,9 @@ function Planet(xPos,yPos,zPos,r,g,b){
         console.log("NEAR PLANET");
         ship.velocity = 0;
         promptUser(this);
+        onPlanet = true;
+        currentPlanet = this;
+        world.setUserPosition(this.x,this.y+3,this.z) //Teleports user to the planet currently
         this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
       }
     }else if(this.onPlanet && this.distance > 200){ //remove plane when the user moves away from it 
