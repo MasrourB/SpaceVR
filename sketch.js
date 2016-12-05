@@ -104,13 +104,11 @@ function draw() {
 	for(var i = 0; i<planets.length;i++){
 	 planets[i].calculateDistance();
 	}
-	// step 1: get the user's position
-	// this is an object with three properties (x, y and z)
 	var pos = world.getUserPosition();
 	currentPosition = pos;
 	
 	if(onPlanet){
-	  for(i =0; i< lifeForms.length;i++){
+	  for(var i =0; i< lifeForms.length;i++){
 	    lifeForms[i].move();
 	  }
 	  
@@ -184,10 +182,18 @@ function Alien(xPos,yPos,zPos,modelName){
     var player = world.getUserPosition();
     var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
     if(distance <1){
-      
+      world.remove(this.model)
       
     }
   }
+  
+  
+  this.displayLife = function(){
+      world.add(this.model)
+      lifeForms.push(myDAE)
+    
+  }
+  
   //TODO: Get movement working by Perlin Noise here
   this.move = function(){
     
@@ -196,11 +202,14 @@ function Alien(xPos,yPos,zPos,modelName){
 		
 		this.xOffset += 0.01;
 		this.zOffset += 0.01;
+		console.log(this.model.z)
 		
-		//this.model.nudge(xMovement,this.y,zMovement);
+		this.model.nudge(xMovement,this.y,zMovement);
     
   }
 }
+
+
 
 function Planet(xPos,yPos,zPos,r,g,b){
   this.x = xPos;
@@ -254,7 +263,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
       else{
         name == "model2";
       }
-      var myDAE = new Alien(this.x,this.y+2,this.z+10,name);
+      var myDAE = new Alien(this.x,this.y+2,this.z+10,"model1");
       //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
       world.add(myDAE.model)
       lifeForms.push(myDAE)
@@ -283,6 +292,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.removeWorld = function(plane){
     this.onPlanet = false;
     world.setFlying(true);
+    onPlanet = false;
     world.remove(this.plane);
   }
  
@@ -293,7 +303,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     
     this.distance = distance;
     
-    if(this.distance < 200 && world.getFlying()){
+    if(this.distance < 100 && world.getFlying()){
       if(this.containsLife){
         console.log("NEAR PLANET");
         ship.velocity = 0;
@@ -303,7 +313,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         world.setUserPosition(this.x,this.y+3,this.z) //Teleports user to the planet currently
         this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
       }
-    }else if(this.onPlanet && this.distance > 200){ //remove plane when the user moves away from it 
+    }else if(this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
       this.removeWorld(this.plane);
     }
     
