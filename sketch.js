@@ -91,6 +91,10 @@ function setup() {
         var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
     	  planet.addLife('model1');
       }
+      if(i <20){
+        //var star = new Star(x/2,y/2,z/2,r,g,b);
+        //world.add(star.body);
+      }
     	planet.addObj(planet.body);
     	planets.push(planet);
     		// add the box to the world
@@ -107,6 +111,7 @@ function draw() {
   //ship.interact(planets);
 	for(var i = 0; i<planets.length;i++){
 	 planets[i].calculateDistance();
+	 planets[i].spin(1);
 	}
 	var pos = world.getUserPosition();
 	currentPosition = pos;
@@ -136,7 +141,35 @@ function draw() {
 }
 
 
-
+function Star(x,y,z,r,g,b){
+  this.x =x;
+  this.y = y;
+  this.z=z;
+  this.r=random(255);
+  this.g=random(255);
+  this.b=random(255);
+  
+  this.xOffset = random(1000);
+	this.zOffset = random(2000, 3000);
+	
+	this.lifeSpan = random(200,300);
+  
+  this.body = new Sphere({
+    x:this.x,
+    y:this.y,
+    z:this.z,
+    red: this.r,
+    green: this.g,
+    blue: this.b,
+    radius:30,
+    metalness:0.25,    brightness:90
+  });
+  
+  world.add(this.body);
+  
+  
+  
+}
 
 function Ship(){
   this.acceleration = 0.01;
@@ -184,13 +217,16 @@ function Alien(xPos,yPos,zPos,modelName){
   
   this.model = new DAE({asset:this.modelName, x:this.x, y:this.y,z:this.z});
   
+  world.add(this.model);
+  lifeForms.push(this);
+  
   this.interact = function(){
     var player = world.getUserPosition();
     var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
     if(distance <10 && !this.visited){
       this.visited = true;
       amountOfForms++;
-      //world.remove(this.model)
+      world.remove(this.model)
       console.log("got")
       
     }
@@ -229,6 +265,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.onPlanet = false; 
   this.plane; 
   this.visited = false;
+  this.toLand = false;
   
   this.r = r;
   this.g = g;
@@ -237,9 +274,17 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.radius = random(0,30);
   this.size = random(50,80);
   
-  this.world;
+  var num = int(random(0,1));
+  if(num == 0){
+    this.material = "rock"
+  }
+  else if(num == 1){
+    this.material = "stone"
+  }
   
   this.container = new Container3D({x:this.x, y:this.y, z:this.z});
+  
+  
   
   this.body = new Sphere({
     x:this.x,
@@ -248,7 +293,17 @@ function Planet(xPos,yPos,zPos,r,g,b){
     red:this.r,
     green:this.g,
     blue:this.b,
-    radius:this.radius
+    //asset:this.material,
+    metalness:0.5,
+    repeatX:100,
+    repeatY:100,
+    toLand : false,
+    radius:this.radius,
+    clickFunction : function(e){
+      e.toLand = true;
+      console.log(e.toLand)
+      
+    }
   });
   
   this.addObj = function(obj){
@@ -277,7 +332,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
       }
       var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,"model1");
       //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
-      myDAE.displayForm()
+      //myDAE.displayForm()
       //lifeForms.push(myDAE)
     }
   }
@@ -293,7 +348,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
 						x:this.x, y:this.y, z:this.z, 
 						width:200, height:200,
 						red:this.r,green:this.g,blue:this.b,
-						//asset:'rock',
+						asset:this.material,
 						repeatX: 100,
 						repeatY: 100,
 						rotationX:-90
@@ -316,7 +371,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     
     this.distance = distance;
     
-    if(this.distance < 100 && world.getFlying() && !this.visited){
+    if(this.body.toLand && world.getFlying() && !this.visited){
       if(this.containsLife){
         console.log("NEAR PLANET");
         ship.velocity = 0;
@@ -333,8 +388,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
     
   }
   
-  this.spin = function(){
-    this.inhabitants[0].spinY(1);
+  this.spin = function(num){
+    this.body.spinY(num);
   }
 }
 
