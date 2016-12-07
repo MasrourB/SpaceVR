@@ -12,7 +12,6 @@
  * Equirectangular image wraparound
  * Get movement of lifeforms working 
  * 
- * BIG: There is an issue with the user only being able to visit one planet. If a user leaves a planet and tries to visit another, nothing will happen.
  * 
  */
 
@@ -23,6 +22,7 @@ var velocity = 0;
 
 var universe = '#';
 var planets = [];
+var rings = [];
 var ship;
 
 var gameState = 0;
@@ -38,14 +38,33 @@ var lifeForms = [];
 function setup() {
 	// no canvas needed
 	noCanvas();
+	
+	
+  //questionContainer.addChild(landPlane);
+   
+	
 
 	// construct the A-Frame world
 	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
+	
+	var player = world.getUserPosition();
+	
+	var landPlane = new Plane({
+    x: player.x,
+    y: player.y,
+    z: 1,
+    width: 50,
+    height:50,
+    asset: 'land',
+    rotationX:-90
+  })
+	
+	world.camera.holder.appendChild(landPlane.tag);
 
 	world.setFlying(true);
 
-	for (var i = 0; i < 20; i++) {
+	for (var i = 0; i < 100; i++) {
 		// pick a location
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
@@ -88,14 +107,13 @@ function setup() {
   		});
   
       if(i <40){
-        var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
-    	  planet.addLife('model1');
+        //var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
+    	  //planet.addLife('model1');
       }
       if(i <20){
         //var star = new Star(x/2,y/2,z/2,r,g,b);
         //world.add(star.body);
       }
-    	planet.addObj(planet.body);
     	planets.push(planet);
     		// add the box to the world
     		//world.add(b);
@@ -271,10 +289,10 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.g = g;
   this.b = b;
   
-  this.radius = random(0,30);
+  this.radius = random(30,70);
   this.size = random(50,80);
   
-  var num = int(random(0,1));
+  var num = int(random(0,2));
   if(num == 0){
     this.material = "rock"
   }
@@ -283,6 +301,33 @@ function Planet(xPos,yPos,zPos,r,g,b){
   }
   
   this.container = new Container3D({x:this.x, y:this.y, z:this.z});
+  
+  var ringProb = int(random(0,100));
+  
+  /*
+  Rings for planets, should they spin or not?
+  */
+  if(ringProb > 90){
+    
+    this.ring = new Ring({
+    x:this.x,
+    y:this.y,
+    z:this.z,
+    red:255,
+    green:255,
+    blue:255,
+    opacity:0.3,
+    rotationX:45,
+    //rotationY:45,
+    radiusInner:this.radius+10,
+    radiusOuter:this.radius+20
+  })
+  this.container.addChild(this.ring);
+  world.add(this.ring)
+  rings.push(this.ring);
+    
+  }
+  
   
   
   
@@ -293,18 +338,22 @@ function Planet(xPos,yPos,zPos,r,g,b){
     red:this.r,
     green:this.g,
     blue:this.b,
-    //asset:this.material,
+    asset:this.material,
     metalness:0.5,
-    repeatX:100,
-    repeatY:100,
+    rotationY:45,
+    rotationX:45,
+    repeatX:3,
+    repeatY:3,
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
+      
       e.toLand = true;
       console.log(e.toLand)
       
     }
   });
+  this.container.addChild(this.body);
   
   this.addObj = function(obj){
     this.container.addChild(obj);
@@ -319,22 +368,29 @@ function Planet(xPos,yPos,zPos,r,g,b){
   }
   
   this.displayLife = function(){
-    for(i = 0; i < this.inhabitants.length; i++){
+    //for(i = 0; i < this.inhabitants.length; i++){
       var xPos = random(-20,20);
       var zPos = random(-20,20);
-      var num = int(random(0,2));
+      var num = int(random(0,4));
       var name = "";
       if(num == 0){
         name = "model1"
       }
-      else{
-        name == "model2";
+      else if(num ==1 ){
+        name = "model2";
       }
-      var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,"model1");
+      else if(num == 2){
+        name = "model3"
+      }
+      else if(num == 3){
+        name == "model4";
+      }
+      
+      var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name)
       //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
       //myDAE.displayForm()
       //lifeForms.push(myDAE)
-    }
+    //}
   }
   
   this.generateWorld = function(){
@@ -372,7 +428,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     this.distance = distance;
     
     if(this.body.toLand && world.getFlying() && !this.visited){
-      if(this.containsLife){
+      //if(this.containsLife){
         console.log("NEAR PLANET");
         ship.velocity = 0;
         promptUser(this);
@@ -380,7 +436,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         currentPlanet = this;
         world.setUserPosition(this.x,this.y+3,this.z) //Teleports user to the planet currently
         this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
-      }
+      //}
     }else if(this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
     console.log("off planet")
       this.removeWorld(this.plane);
@@ -390,6 +446,13 @@ function Planet(xPos,yPos,zPos,r,g,b){
   
   this.spin = function(num){
     this.body.spinY(num);
+    this.body.spinX(num);
+    if(this.ring){
+      //this.ring.spinY(num);
+    this.ring.spinX(num);
+      
+    }
+    
   }
 }
 
