@@ -19,6 +19,7 @@
 var world;
 var acceleration = 0.01;
 var velocity = 0;
+var landPlane;
 
 var universe = '#';
 var planets = [];
@@ -53,14 +54,18 @@ function setup() {
 	var landPlane = new Plane({
     x: player.x,
     y: player.y,
-    z: 1,
+    z: -100,
     width: 50,
     height:50,
     asset: 'land',
-    rotationX:-90
+    land: false,
+    clickFunction: function(e){
+      e.land = true;
+    }
+    //rotationX:-90
   })
 	
-	world.camera.holder.appendChild(landPlane.tag);
+	//world.camera.holder.appendChild(landPlane.tag);
 
 	world.setFlying(true);
 
@@ -138,6 +143,7 @@ function draw() {
 	  for(var i =0; i< lifeForms.length;i++){
 	    //lifeForms[i].move();
 	    lifeForms[i].interact();
+	    lifeForms[i].model.spinY(1);
 	  }
 	  
 	}
@@ -201,7 +207,7 @@ function Ship(){
   this.move = function(){
     if(!onPlanet){
       if (mouseIsPressed || touchIsDown) {
-      if(this.velocity < 3){
+      if(this.velocity < 1){
         this.velocity += this.acceleration;
       }
       
@@ -369,8 +375,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
   
   this.displayLife = function(){
     //for(i = 0; i < this.inhabitants.length; i++){
-      var xPos = random(-20,20);
-      var zPos = random(-20,20);
+      var xPos = random(-40,40);
+      var zPos = random(-40,40);
       var num = int(random(0,4));
       var name = "";
       if(num == 0){
@@ -383,7 +389,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         name = "model3"
       }
       else if(num == 3){
-        name == "model4";
+        name == "model3";
       }
       
       var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name)
@@ -431,7 +437,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
       //if(this.containsLife){
         console.log("NEAR PLANET");
         ship.velocity = 0;
-        promptUser(this);
+        //promptUser(this);
         onPlanet = true;
         currentPlanet = this;
         world.setUserPosition(this.x,this.y+3,this.z) //Teleports user to the planet currently
@@ -460,29 +466,25 @@ function Planet(xPos,yPos,zPos,r,g,b){
 //prompt the user and ask them if they want to 'land' on the planet or not 
 //right now, they land whether or not they want to 
 function promptUser(planet){
-  console.log("prompting user");
-  var x = planet.x;
-  var y = planet.y; 
-  var z = planet.z;
-  var radius = planet.radius; 
-  
-  var questionContainer = new Container3D({
-    x:x + radius,
-    y:y + radius, 
-    z:z + radius, 
-  });
-  
-  //This is very buggy - sometimes the plane shows up, but facing away from the user
-  //and sometimes it doesn't show up at all, and the suer can't move
-  var landPlane = new Plane({
-    x: questionContainer.x,
-    y: questionContainer.y,
-    z: questionContainer.z,
+  ship.velocity =0;
+  var player = world.getUserPosition();
+	
+	landPlane = new Plane({
+    x: player.x,
+    y: player.y,
+    z: -100,
     width: 50,
     height:50,
-    asset: 'land'
+    asset: 'land',
+    land: false,
+    clickFunction: function(e){
+      e.land = true;
+    }
+    //rotationX:-90
   })
-  questionContainer.addChild(landPlane);
-  world.add(questionContainer); 
+	
+	world.camera.holder.appendChild(landPlane.tag);
+
+  
 }
 
