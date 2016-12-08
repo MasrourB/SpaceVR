@@ -6,11 +6,17 @@
  * /
 
 /* TODO: 
- * Prompting user if they want to 'land' on a planet (should be implemented in the promptUser function)
- * Loading 'alien' DAE model when you land on a planet. I guess if you get close enough to the alien you leave the planet 
- * Border recognition for leaving a planet - when the user exits the plane, the plane should revert back to a planet. 
- * Equirectangular image wraparound
- * Get movement of lifeforms working 
+ * 
+ * Alien enemy (UFO)****
+ * When the plane is created, the planet is still on the map (splice the planets array to remove it, and when user leaves plane, put the planet back in)
+ * Removing a planet when an enemy gets it
+ * Warp speed special effects via cylinder
+ * Add overhead sphere to make an atmosphere
+ * Deceleration
+ * Sound effects/music
+ * (If we have time) add landing prompt, sun/stars, find wrap around
+ * Start/ending/Game Over screens
+ * Add plane to user camera for counter (semi-transparent)
  * 
  * 
  */
@@ -19,9 +25,10 @@
 var world;
 var acceleration = 0.01;
 var velocity = 0;
-var landPlane;
+var landOnPlanet = false;
+var closeEnough = false;
 
-var universe = '#';
+//var universe = '#';
 var planets = [];
 var rings = [];
 var ship;
@@ -35,6 +42,12 @@ var currentPosition;
 var amountOfForms = 0;
 
 var lifeForms = [];
+var rocketSound;
+
+function preload(){
+  rocketSound = loadSound('sfx/rocket.mp3');
+  bgm = loadSound('music/moon.mp3');
+}
 
 function setup() {
 	// no canvas needed
@@ -130,6 +143,7 @@ function setup() {
 
 
 function draw() {
+  playSound(bgm);
   ship.move();
   //ship.interact(planets);
 	for(var i = 0; i<planets.length;i++){
@@ -186,7 +200,7 @@ function Star(x,y,z,r,g,b){
     green: this.g,
     blue: this.b,
     radius:30,
-    metalness:0.25,    brightness:90
+    metalness:0.25
   });
   
   world.add(this.body);
@@ -208,6 +222,7 @@ function Ship(){
     if(!onPlanet){
       if (mouseIsPressed || touchIsDown) {
       if(this.velocity < 1){
+        playSound(rocketSound);
         this.velocity += this.acceleration;
       }
       
@@ -278,6 +293,47 @@ function Alien(xPos,yPos,zPos,modelName){
   }
 }
 
+//Enemy class
+function Enemy(x,y,z){
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.moving = false;
+  
+  this.speed = random(10000,20000);
+  
+  this.speciesCollected = 0;
+  
+  this.model = new DAE({asset:'model4', x:this.x, y:this.y,z:this.z});
+  
+  world.add(this.model)
+  
+  var player = world.getUserPosition();
+	
+	this.counter = new Plane({
+    x: player.x,
+    y: player.y,
+    z: -100,
+    width: 50,
+    height:50,
+    asset: 'land',
+    land: false,
+    clickFunction: function(e){
+      landOnPlanet = true;
+    }
+    //rotationX:-90
+  })
+	
+	//world.camera.holder.appendChild(this.counter.tag);
+  
+  this.move = function(planet){
+    if(!moving){
+      
+    }
+    
+  }
+  
+}
 
 
 function Planet(xPos,yPos,zPos,r,g,b){
@@ -348,8 +404,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
     metalness:0.5,
     rotationY:45,
     rotationX:45,
-    repeatX:3,
-    repeatY:3,
+    repeatX:10,
+    repeatY:10,
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
@@ -389,7 +445,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         name = "model3"
       }
       else if(num == 3){
-        name == "model3";
+        name = "model3";
       }
       
       var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name)
@@ -400,6 +456,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   }
   
   this.generateWorld = function(){
+    stopSound(rocketSound);
     //this.world = new World('VRScene');
     console.log("SETTING UP WORLD");
     onPlanet = true;
@@ -418,12 +475,24 @@ function Planet(xPos,yPos,zPos,r,g,b){
 					   
 		this.displayLife();
     world.add(this.plane);
+    
+    this.atmosphere = new Sphere({
+      x:this.x, y:this.y, z:this.z,
+      red:0,
+      green:0,
+      blue:129,
+      radius:this.radius*20,
+      opacity:0.6,
+      roughness:0.7
+    })
+    world.add(this.atmosphere);
 }
   this.removeWorld = function(plane){
     this.onPlanet = false;
     world.setFlying(true);
     onPlanet = false;
     world.remove(this.plane);
+    world.remove(this.atmosphere);
   }
  
   //Code to check if the user is close enough to enter a planet 
@@ -438,12 +507,12 @@ function Planet(xPos,yPos,zPos,r,g,b){
         console.log("NEAR PLANET");
         ship.velocity = 0;
         //promptUser(this);
-        onPlanet = true;
         currentPlanet = this;
-        world.setUserPosition(this.x,this.y+3,this.z) //Teleports user to the planet currently
+        world.setUserPosition(this.x,this.y+2,this.z) //Teleports user to the planet currently
+        onPlanet = true;
         this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
       //}
-    }else if(this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
+    }else if(onPlanet && this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
     console.log("off planet")
       this.removeWorld(this.plane);
     }
@@ -455,7 +524,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     this.body.spinX(num);
     if(this.ring){
       //this.ring.spinY(num);
-    this.ring.spinX(num);
+    this.ring.spinY(num);
       
     }
     
@@ -478,7 +547,7 @@ function promptUser(planet){
     asset: 'land',
     land: false,
     clickFunction: function(e){
-      e.land = true;
+      landOnPlanet = true;
     }
     //rotationX:-90
   })
@@ -488,3 +557,18 @@ function promptUser(planet){
   
 }
 
+function playSound(song){
+  if(song.isPlaying()){
+    //song.stop();
+  }
+  else{
+    song.play();
+  }
+}
+
+function stopSound(song){
+  if(song.isPlaying()){
+    song.stop();
+  }
+  
+}
