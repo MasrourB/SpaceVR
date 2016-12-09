@@ -32,6 +32,7 @@ var closeEnough = false;
 var planets = [];
 var rings = [];
 var ship;
+var ufo;
 
 var gameState = 0;
 var onPlanet = false;
@@ -43,10 +44,12 @@ var amountOfForms = 0;
 
 var lifeForms = [];
 var rocketSound;
+var collected; 
 
 function preload(){
   rocketSound = loadSound('sfx/rocket.mp3');
   bgm = loadSound('music/moon.mp3');
+  collected = loadSound('sfx/win.wav');
 }
 
 function setup() {
@@ -138,6 +141,7 @@ function setup() {
     	}
   
     ship = new Ship();
+    ufo = new Enemy(player.x, player.y, player.z - 500);
 }
 
 
@@ -145,6 +149,7 @@ function setup() {
 function draw() {
   playSound(bgm);
   ship.move();
+  ufo.move();
   //ship.interact(planets);
 	for(var i = 0; i<planets.length;i++){
 	 planets[i].calculateDistance();
@@ -265,8 +270,9 @@ function Alien(xPos,yPos,zPos,modelName){
     if(distance <10 && !this.visited){
       this.visited = true;
       amountOfForms++;
-      world.remove(this.model)
-      console.log("got")
+      world.remove(this.model);
+      collected.play();
+      console.log("got");
       
     }
   }
@@ -300,37 +306,35 @@ function Enemy(x,y,z){
   this.z = z;
   this.moving = false;
   
-  this.speed = random(10000,20000);
+  this.speed = random(1,2);
   
-  this.speciesCollected = 0;
+  // this.speciesCollected = 0;
   
-  this.model = new DAE({asset:'model4', x:this.x, y:this.y,z:this.z});
+  this.model = new DAE({asset:"model4", x:this.x, y:this.y,z:this.z});
+  console.log("Adding model");
+  world.add(this.model);
   
-  world.add(this.model)
-  
-  var player = world.getUserPosition();
+  // var player = world.getUserPosition();
 	
-	this.counter = new Plane({
-    x: player.x,
-    y: player.y,
-    z: -100,
-    width: 50,
-    height:50,
-    asset: 'land',
-    land: false,
-    clickFunction: function(e){
-      landOnPlanet = true;
-    }
-    //rotationX:-90
-  })
+// 	this.counter = new Plane({
+//     x: player.x,
+//     y: player.y,
+//     z: -100,
+//     width: 50,
+//     height:50,
+//     asset: 'land',
+//     land: false,
+//     clickFunction: function(e){
+//       landOnPlanet = true;
+//     }
+//     //rotationX:-90
+//   })
 	
 	//world.camera.holder.appendChild(this.counter.tag);
   
   this.move = function(planet){
-    if(!moving){
-      
-    }
-    
+    var randomPlanet = round(random(0, planets.length+1));
+    console.log(randomPlanet);
   }
   
 }
@@ -442,7 +446,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         name = "model2";
       }
       else if(num == 2){
-        name = "model3"
+        name = "model3";
       }
       else if(num == 3){
         name = "model3";
