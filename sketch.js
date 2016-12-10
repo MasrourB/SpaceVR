@@ -11,13 +11,10 @@
  * When the plane is created, the planet is still on the map (splice the planets array to remove it, and when user leaves plane, put the planet back in)
  * Removing a planet when an enemy gets it
  * Warp speed special effects via cylinder
- * Add overhead sphere to make an atmosphere
  * Deceleration
- * Sound effects/music
  * (If we have time) add landing prompt, sun/stars, find wrap around
  * Start/ending/Game Over screens
  * Add plane to user camera for counter (semi-transparent)
- * 
  * 
  */
 
@@ -59,8 +56,6 @@ function setup() {
 	
   //questionContainer.addChild(landPlane);
    
-	
-
 	// construct the A-Frame world
 	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
@@ -85,7 +80,7 @@ function setup() {
 
 	world.setFlying(true);
 
-	for (var i = 0; i < 100; i++) {
+	for (var i = 0; i < 200; i++) {
 		// pick a location
 		var x = random(-random(2000), random(2000));
 		var y = random(-random(2000),random(2000));
@@ -152,8 +147,11 @@ function draw() {
   ufo.move();
   //ship.interact(planets);
 	for(var i = 0; i<planets.length;i++){
-	 planets[i].calculateDistance();
-	 planets[i].spin(1);
+  	 planets[i].calculateDistance();
+	 if(planets[i]){
+   	 planets[i].spin(1);
+	 }
+
 	}
 	var pos = world.getUserPosition();
 	currentPosition = pos;
@@ -305,38 +303,60 @@ function Enemy(x,y,z){
   this.y = y;
   this.z = z;
   this.moving = false;
+  this.prevX = random(-2,2);
+  this.prevY = random(-2,2);
+  this.prevZ = random(-2,2);
   
-  this.speed = random(1,2);
-  
-  // this.speciesCollected = 0;
+  this.speciesCollected = 0;
   
   this.model = new DAE({asset:"model4", x:this.x, y:this.y,z:this.z});
-  console.log("Adding model");
   world.add(this.model);
-  
-  // var player = world.getUserPosition();
-	
-// 	this.counter = new Plane({
-//     x: player.x,
-//     y: player.y,
-//     z: -100,
-//     width: 50,
-//     height:50,
-//     asset: 'land',
-//     land: false,
-//     clickFunction: function(e){
-//       landOnPlanet = true;
-//     }
-//     //rotationX:-90
-//   })
-	
-	//world.camera.holder.appendChild(this.counter.tag);
-  
+
   this.move = function(planet){
-    var randomPlanet = round(random(0, planets.length+1));
-    console.log(randomPlanet);
+    this.model.nudge(this.prevX, this.prevY, this.prevZ);
+    var randomX = random(-1.5, 1.5);
+    var randomY = random(-1.5, 1.5);
+    var randomZ = random(-1.5, 1.5);
+    
+    //go in the same direction 
+    if(randomX < 0 && this.prevX > 0 || randomX > 0 && this.prevX < 0){
+      randomX = -randomX;
+    }
+    if(randomY < 0 && this.prevY > 0 || randomY > 0 && this.prevY < 0){
+      randomY = -randomY;
+    }
+    if(randomZ < 0 && this.prevZ > 0 || randomZ > 0 && this.prevZ < 0){
+      randomZ = -randomZ;
+    }
+    this.prevX = randomX;
+    this.prevY = randomY;
+    this.prevZ = randomZ; 
+    for(var i = 0; i < planets.length; i++){
+      var planet = planets[i];
+      if(dist(this.model.x, this.model.y, this.model.z, planet.body.x, planet.body.y, planet.body.z) < 100){
+        console.log("Alien is near planet!");
+        this.collect(planet);
+      }
+    }
+
   }
-  
+  this.collect = function(planet){
+    this.speciesCollected++;
+    console.log("Alien got a planet!");
+    console.log("removing ring");
+    if(planet.ring){   
+      var index = rings.indexOf(planet.ring);
+      rings = rings.splice(index, 1);
+      planet.container.removeChild(this.ring);
+    }
+    console.log("removing container");
+    world.remove(planet.container);
+    var index = planets.indexOf(planet);
+    planets = planets.splice(index, 1);
+    this.prevX = random(-2,2);
+    this.prevY = random(-2,2);
+    this.prevZ = random(-2,2);
+  }
 }
 
 
@@ -360,10 +380,10 @@ function Planet(xPos,yPos,zPos,r,g,b){
   
   var num = int(random(0,2));
   if(num == 0){
-    this.material = "rock"
+    this.material = "rock";
   }
   else if(num == 1){
-    this.material = "stone"
+    this.material = "stone";
   }
   
   this.container = new Container3D({x:this.x, y:this.y, z:this.z});
@@ -389,7 +409,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     radiusOuter:this.radius+20
   })
   this.container.addChild(this.ring);
-  world.add(this.ring)
+  // world.add(this.ring)
   rings.push(this.ring);
     
   }
@@ -420,6 +440,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     }
   });
   this.container.addChild(this.body);
+  world.add(this.container);
   
   this.addObj = function(obj){
     this.container.addChild(obj);
@@ -452,7 +473,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         name = "model3";
       }
       
-      var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name)
+      var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name);
       //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
       //myDAE.displayForm()
       //lifeForms.push(myDAE)
@@ -497,6 +518,16 @@ function Planet(xPos,yPos,zPos,r,g,b){
     onPlanet = false;
     world.remove(this.plane);
     world.remove(this.atmosphere);
+    console.log("removing ring");
+    if(this.ring){   
+      var index = rings.indexOf(this.ring);
+      rings = rings.splice(index, 1);
+      this.container.removeChild(this.ring);
+    }
+    console.log("removing container");
+    world.remove(this.container);
+    var index = planets.indexOf(this);
+    planets = planets.splice(index, 1);
   }
  
   //Code to check if the user is close enough to enter a planet 
@@ -517,7 +548,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
       //}
     }else if(onPlanet && this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
-    console.log("off planet")
+      console.log("off planet");  
       this.removeWorld(this.plane);
     }
     
