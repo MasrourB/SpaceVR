@@ -92,7 +92,6 @@ function setup() {
     z: -100,
     width: 50,
     height:50,
-    asset: 'land'
     //rotationX:-90
   })
 	
@@ -425,8 +424,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
-      
-      warp(e)
+      warp(e);
       
     }
   });
@@ -490,6 +488,15 @@ function Planet(xPos,yPos,zPos,r,g,b){
 					   });
 					   
 		this.displayLife();
+		
+		//remove the planet and its ring from the world so it doesn't show up when you're on the plane 
+		if(this.ring){   
+      var index = rings.indexOf(this.ring);
+      rings = rings.splice(index, 1);
+      this.container.removeChild(this.ring);
+    }
+    console.log("removing container");
+    world.remove(this.container);
     world.add(this.plane);
     
     this.atmosphere = new Sphere({
@@ -504,7 +511,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     world.add(this.atmosphere);
     
     var pos = world.getUserPosition();
-    world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z)
+    world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z);
 }
   this.removeWorld = function(plane){
     this.onPlanet = false;
@@ -512,17 +519,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     onPlanet = false;
     world.remove(this.plane);
     world.remove(this.atmosphere);
-    console.log("removing ring");
-    if(this.ring){   
-      var index = rings.indexOf(this.ring);
-      rings = rings.splice(index, 1);
-      this.container.removeChild(this.ring);
-    }
-    console.log("removing container");
-    world.remove(this.container);
-    var index = planets.indexOf(this);
-    //this.visible = false;
-    //planets = planets.splice(index, 1);
+
   }
  
   //Code to check if the user is close enough to enter a planet 
@@ -575,7 +572,6 @@ function promptUser(planet){
     z: -100,
     width: 50,
     height:50,
-    asset: 'land',
     land: false,
     clickFunction: function(e){
       landOnPlanet = true;
@@ -659,7 +655,6 @@ function checkScore(){
     z: player.z-100,
     width: 50,
     height:50,
-    asset: 'land'
     //rotationX:-90
   })
 	
@@ -679,34 +674,38 @@ function checkScore(){
 function warp(thisBox){
           // get the user's position
         var up = world.getUserPosition();
-
+        
         // get this box's position
         var ap = thisBox.getPosition();
-
+        console.log(up);
+        console.log(ap);
+        warpContainer = new Container3D({});
         // compute the difference between the two and arrange the warp container
         // to sit exactly between the user and the clicked box
         var xDiff = abs(up.x - ap.x);
 
         if (ap.x < up.x) {
-          warpContainer.setX(ap.x + 0.5 * xDiff);
+          warpContainer.setX(ap.x + (0.5 * xDiff));
         } else {
-          warpContainer.setX(ap.x - 0.5 * xDiff);
+          warpContainer.setX(ap.x - (0.5 * xDiff));
         }
 
         var yDiff = abs(up.y - ap.y);
         if (ap.y < up.y) {
-          warpContainer.setY(ap.y + 0.5 * yDiff);
+          warpContainer.setY(ap.y + (0.5 * yDiff));
         } else {
-          warpContainer.setY(ap.y - 0.5 * yDiff);
+          warpContainer.setY(ap.y - (0.5 * yDiff));
         }
 
         var zDiff = abs(up.z - ap.z);
         if (ap.z < up.z) {
-          warpContainer.setZ(ap.z + 0.5 * zDiff);
+          warpContainer.setZ(ap.z + (0.5 * zDiff));
         } else {
-          warpContainer.setZ(ap.z - 0.5 * zDiff);
+          warpContainer.setZ(ap.z - (0.5 * zDiff));
         }
-
+        
+        console.log("Warp position: ");
+        console.log(warpContainer.getPosition());
 
         // force the warp container to face the clicked box (this will rotate it accordingly)
         warpContainer.tag.object3D.lookAt(thisBox.tag.object3D.position);
@@ -742,7 +741,7 @@ function warp(thisBox){
           // when the user arrives at the destination
           function() {
             //onPlanet = true;
-        thisBox.toLand = true;
+            thisBox.toLand = true;
             warpCylinder.setOpacity(0);
             console.log("DONE");
           }
