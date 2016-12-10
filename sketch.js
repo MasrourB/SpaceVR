@@ -509,7 +509,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
       roughness:0.7
     })
     world.add(this.atmosphere);
-    
+    //HERE: So even though we can warp in a weird direction, we set the user's position to the plane anyways
     var pos = world.getUserPosition();
     world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z);
 }
@@ -682,6 +682,9 @@ function warp(thisBox){
         warpContainer = new Container3D({});
         // compute the difference between the two and arrange the warp container
         // to sit exactly between the user and the clicked box
+        
+        //HERE: This is where I think the error occurs. I console.logged the user, planet, and generated 3D container positions, and the container position doens't seem correct
+        //Thus, we warp in a weird direction. 
         var xDiff = abs(up.x - ap.x);
 
         if (ap.x < up.x) {
@@ -740,7 +743,7 @@ function warp(thisBox){
 
           // when the user arrives at the destination
           function() {
-            //onPlanet = true;
+            //HERE: We set toLand=true, so when the planet calculates the distance again it'll call its generateWorld() method
             thisBox.toLand = true;
             warpCylinder.setOpacity(0);
             console.log("DONE");
