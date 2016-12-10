@@ -38,10 +38,14 @@ var currentPlanet;
 var currentPosition;
 
 var amountOfForms = 0;
+var playerForms = 0;
 
 var lifeForms = [];
 var rocketSound;
 var collected; 
+
+
+var warpCylinder, warpContainer;
 
 function preload(){
   rocketSound = loadSound('sfx/rocket.mp3');
@@ -60,6 +64,26 @@ function setup() {
 	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
 	
+	 // create a container to hold our warp system
+  warpContainer = new Container3D({});
+
+  // create a cylinder inside of the warp container
+  warpCylinder = new Cone({
+    x: 0,
+    y: 0,
+    z: 0,
+    height: 10,
+    radiusBottom: 1,
+    radiusTop: 0.5,
+    rotationX: 90,
+    openEnded: true,
+    side: 'double',
+    asset: 'stars',
+    opacity: 0
+  });
+  warpContainer.addChild(warpCylinder);
+  world.add(warpContainer);
+	
 	var player = world.getUserPosition();
 	
 	var landPlane = new Plane({
@@ -68,11 +92,7 @@ function setup() {
     z: -100,
     width: 50,
     height:50,
-    asset: 'land',
-    land: false,
-    clickFunction: function(e){
-      e.land = true;
-    }
+    asset: 'land'
     //rotationX:-90
   })
 	
@@ -142,42 +162,14 @@ function setup() {
 
 
 function draw() {
-  playSound(bgm);
-  ship.move();
-  ufo.move();
-  //ship.interact(planets);
-	for(var i = 0; i<planets.length;i++){
-  	 planets[i].calculateDistance();
-	 if(planets[i]){
-   	 planets[i].spin(1);
-	 }
-
-	}
-	var pos = world.getUserPosition();
-	currentPosition = pos;
-	
-	if(onPlanet){
-	  for(var i =0; i< lifeForms.length;i++){
-	    //lifeForms[i].move();
-	    lifeForms[i].interact();
-	    lifeForms[i].model.spinY(1);
-	  }
-	  
-	}
-
-	// now evaluate
-	if (pos.x > 5000) {
-		world.setUserPosition(-5000, pos.y, pos.z);
-	}
-	else if (pos.x < -5000) {
-		world.setUserPosition(5000, pos.y, pos.z);
-	}
-	if (pos.z > 5000) {
-		world.setUserPosition(pos.x, pos.y, -5000);
-	}
-	else if (pos.z < -5000) {
-		world.setUserPosition(pos.x, pos.y, 5000);
-	}
+  checkScore();
+  if(gameState == 0){
+    mainGame();
+  }
+  else{
+    
+  }
+  
 
 }
 
@@ -267,7 +259,7 @@ function Alien(xPos,yPos,zPos,modelName){
     var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
     if(distance <10 && !this.visited){
       this.visited = true;
-      amountOfForms++;
+      playerForms++;
       world.remove(this.model);
       collected.play();
       console.log("got");
@@ -346,13 +338,13 @@ function Enemy(x,y,z){
     console.log("removing ring");
     if(planet.ring){   
       var index = rings.indexOf(planet.ring);
-      rings = rings.splice(index, 1);
-      planet.container.removeChild(this.ring);
+      //rings = rings.splice(index, 1);
+      //planet.container.removeChild(this.ring);
     }
     console.log("removing container");
-    world.remove(planet.container);
+    //world.remove(planet.container);
     var index = planets.indexOf(planet);
-    planets = planets.splice(index, 1);
+    //planets = planets.splice(index, 1);
     this.prevX = random(-2,2);
     this.prevY = random(-2,2);
     this.prevZ = random(-2,2);
@@ -434,8 +426,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     radius:this.radius,
     clickFunction : function(e){
       
-      e.toLand = true;
-      console.log(e.toLand)
+      warp(e)
       
     }
   });
@@ -511,6 +502,9 @@ function Planet(xPos,yPos,zPos,r,g,b){
       roughness:0.7
     })
     world.add(this.atmosphere);
+    
+    var pos = world.getUserPosition();
+    world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z)
 }
   this.removeWorld = function(plane){
     this.onPlanet = false;
@@ -527,7 +521,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
     console.log("removing container");
     world.remove(this.container);
     var index = planets.indexOf(this);
-    planets = planets.splice(index, 1);
+    //this.visible = false;
+    //planets = planets.splice(index, 1);
   }
  
   //Code to check if the user is close enough to enter a planet 
@@ -539,13 +534,14 @@ function Planet(xPos,yPos,zPos,r,g,b){
     
     if(this.body.toLand && world.getFlying() && !this.visited){
       //if(this.containsLife){
-        console.log("NEAR PLANET");
-        ship.velocity = 0;
+        //console.log("NEAR PLANET");
+        //ship.velocity = 0;
         //promptUser(this);
         currentPlanet = this;
-        world.setUserPosition(this.x,this.y+2,this.z) //Teleports user to the planet currently
-        onPlanet = true;
-        this.generateWorld(); //TODO: move this into the 'land' graphic's click function. 
+        //world.setUserPosition(this.x,this.y+2,this.z) //Teleports user to the planet currently
+       // warp(this.body);
+       this.generateWorld();
+         //TODO: move this into the 'land' graphic's click function. 
       //}
     }else if(onPlanet && this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
       console.log("off planet");  
@@ -605,5 +601,154 @@ function stopSound(song){
   if(song.isPlaying()){
     song.stop();
   }
+  
+}
+
+function mainGame(){
+  
+  if(amountOfForms == 3){
+    gameState++;
+  }
+  
+  playSound(bgm);
+  ship.move();
+  ufo.move();
+  //ship.interact(planets);
+	for(var i = 0; i<planets.length;i++){
+  	 planets[i].calculateDistance();
+	 if(planets[i]){
+   	 planets[i].spin(1);
+	 }
+
+	}
+	var pos = world.getUserPosition();
+	currentPosition = pos;
+	
+	if(onPlanet){
+	  for(var i =0; i< lifeForms.length;i++){
+	    //lifeForms[i].move();
+	    lifeForms[i].interact();
+	    lifeForms[i].model.spinY(1);
+	  }
+	  
+	}
+
+	// now evaluate
+	if (pos.x > 5000) {
+		world.setUserPosition(-5000, pos.y, pos.z);
+	}
+	else if (pos.x < -5000) {
+		world.setUserPosition(5000, pos.y, pos.z);
+	}
+	if (pos.z > 5000) {
+		world.setUserPosition(pos.x, pos.y, -5000);
+	}
+	else if (pos.z < -5000) {
+		world.setUserPosition(pos.x, pos.y, 5000);
+	}
+
+  
+}
+  
+function checkScore(){
+  var player = world.getUserPosition();
+  if(amountOfForms == 3 || playerForms == 1){
+    var landPlane = new Plane({
+    x: player.x,
+    y: player.y,
+    z: player.z-100,
+    width: 50,
+    height:50,
+    asset: 'land'
+    //rotationX:-90
+  })
+	
+	world.camera.holder.appendChild(landPlane.tag);
+	gameState++
+	
+	if(mouseIsPressed || touchIsDown){
+	  amountOfForms = 0;
+	  playerForms = 0;
+	  world.camera.holder.remove(landPlane.tag)
+	  gameState--;
+	}
+  }
+}
+  
+  
+function warp(thisBox){
+          // get the user's position
+        var up = world.getUserPosition();
+
+        // get this box's position
+        var ap = thisBox.getPosition();
+
+        // compute the difference between the two and arrange the warp container
+        // to sit exactly between the user and the clicked box
+        var xDiff = abs(up.x - ap.x);
+
+        if (ap.x < up.x) {
+          warpContainer.setX(ap.x + 0.5 * xDiff);
+        } else {
+          warpContainer.setX(ap.x - 0.5 * xDiff);
+        }
+
+        var yDiff = abs(up.y - ap.y);
+        if (ap.y < up.y) {
+          warpContainer.setY(ap.y + 0.5 * yDiff);
+        } else {
+          warpContainer.setY(ap.y - 0.5 * yDiff);
+        }
+
+        var zDiff = abs(up.z - ap.z);
+        if (ap.z < up.z) {
+          warpContainer.setZ(ap.z + 0.5 * zDiff);
+        } else {
+          warpContainer.setZ(ap.z - 0.5 * zDiff);
+        }
+
+
+        // force the warp container to face the clicked box (this will rotate it accordingly)
+        warpContainer.tag.object3D.lookAt(thisBox.tag.object3D.position);
+
+        // compute the distance between the user and the clicked box
+        var d = dist(ap.x, ap.y, ap.z, up.x, up.y, up.z);
+
+        // compute how big the warp cylinder needs to be to form a full "tunnel" between
+        // the user and the clicked box
+        var newScale = d / 10;
+        warpCylinder.setScaleY(newScale);
+
+        // make the warp cylinder invisible 
+        warpCylinder.setOpacity(0);
+
+        // compute how long it will take to get to the box
+        var timeToWarp = map(d, 0, 1000, 0, 2000);
+        var startWarpTime = millis();
+
+        // now start a slide event
+        world.slideToObject(thisBox, timeToWarp, function() {
+
+            // first half of the journey - the warp cylinder should fade in
+            if (millis() < startWarpTime + timeToWarp * 0.8) {
+              warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.02);
+            }
+            // second half of the jourly - the cylinder should fade out
+            else {
+              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.005);
+            }
+          },
+
+          // when the user arrives at the destination
+          function() {
+            //onPlanet = true;
+        thisBox.toLand = true;
+            warpCylinder.setOpacity(0);
+            console.log("DONE");
+          }
+
+        );
+
+
   
 }
