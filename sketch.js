@@ -438,7 +438,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
         name = "model3";
       }
       
-      var myDAE = new Alien(this.x+xPos,this.y+2,this.z+zPos,name);
+      var myDAE = new Alien(xPos,2,zPos,name);
       //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
       //myDAE.displayForm()
       //lifeForms.push(myDAE)
@@ -454,7 +454,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     this.onPlanet = true; 
     world.setFlying(false);
     this.plane = new Plane({
-						x:this.x, y:this.y, z:this.z, 
+						x:0, y:0, z:0, 
 						width:200, height:200,
 						red:this.r,green:this.g,blue:this.b,
 						asset:this.material,
@@ -475,7 +475,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     world.add(this.plane);
     
     this.atmosphere = new Sphere({
-      x:this.x, y:this.y, z:this.z,
+      x:0, y:0, z:0,
       red:0,
       green:0,
       blue:129,
@@ -513,7 +513,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   //Code to check if the user is close enough to enter a planet 
   this.calculateDistance = function(){
     var pos = world.getUserPosition();
-    var distance = dist(this.x,this.y,this.z,pos.x,pos.y,pos.z)
+    var distance = dist(0,0,0,pos.x,pos.y,pos.z)
     
     this.distance = distance;
     
@@ -715,7 +715,7 @@ function warp(thisBox){
         warpCylinder.setOpacity(0);
 
         // compute how long it will take to get to the box
-        var timeToWarp = map(d, 0, 1500, 0, 2000);
+        var timeToWarp = map(d, 0, 1500, 0, 2500);
         var startWarpTime = millis();
 
         // now start a slide event
@@ -727,7 +727,7 @@ function warp(thisBox){
             }
             // second half of the jourly - the cylinder should fade out
             else {
-              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.0005);
+              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.00005);
             }
           },
 
