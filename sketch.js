@@ -92,6 +92,7 @@ function setup() {
     z: -100,
     width: 50,
     height:50,
+    asset: 'land'
     //rotationX:-90
   })
 	
@@ -122,33 +123,6 @@ function setup() {
   	// add the container to the world
   	world.add(planet.container);
   
-  	var b = new Sphere({
-  							x:x,
-  							y:y,
-  							z:z,
-  							radius: 20,
-  							
-  							red: r, green: g, blue: b,
-  						/*
-  							clickFunction: function(theBox) {
-  								// update color
-  
-  
-  								// move the user toward this box over a 2 second period
-  								// (time is expressed in milliseconds)
-  								world.slideToObject( theBox, 2000 );
-  							}
-  							*/
-  		});
-  
-      if(i <40){
-        //var myDAE = new DAE({asset:'model1', x:x+20, y:y+20,z:z+20});
-    	  //planet.addLife('model1');
-      }
-      if(i <20){
-        //var star = new Star(x/2,y/2,z/2,r,g,b);
-        //world.add(star.body);
-      }
     	planets.push(planet);
     		// add the box to the world
     		//world.add(b);
@@ -156,6 +130,7 @@ function setup() {
   
     ship = new Ship();
     ufo = new Enemy(player.x, player.y, player.z - 500);
+    
 }
 
 
@@ -258,7 +233,7 @@ function Alien(xPos,yPos,zPos,modelName){
     var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
     if(distance <10 && !this.visited){
       this.visited = true;
-      playerForms++;
+      amountOfForms++;
       world.remove(this.model);
       collected.play();
       console.log("got");
@@ -366,7 +341,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.g = g;
   this.b = b;
   
-  this.radius = random(30,70);
+  this.radius = random(70,120);
   this.size = random(50,80);
   
   var num = int(random(0,2));
@@ -424,7 +399,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
-      warp(e);
+      
+      warp(e)
       
     }
   });
@@ -488,15 +464,14 @@ function Planet(xPos,yPos,zPos,r,g,b){
 					   });
 					   
 		this.displayLife();
-		
 		//remove the planet and its ring from the world so it doesn't show up when you're on the plane 
 		if(this.ring){   
       var index = rings.indexOf(this.ring);
-      rings = rings.splice(index, 1);
-      this.container.removeChild(this.ring);
+       rings = rings.splice(index, 1);
+       this.container.removeChild(this.ring);
     }
-    console.log("removing container");
-    world.remove(this.container);
+     console.log("removing container");
+     world.remove(this.container);
     world.add(this.plane);
     
     this.atmosphere = new Sphere({
@@ -506,12 +481,13 @@ function Planet(xPos,yPos,zPos,r,g,b){
       blue:129,
       radius:this.radius*20,
       opacity:0.6,
+      asset:'planetSky',
       roughness:0.7
     })
     world.add(this.atmosphere);
-    //HERE: So even though we can warp in a weird direction, we set the user's position to the plane anyways
+    
     var pos = world.getUserPosition();
-    world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z);
+    world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z)
 }
   this.removeWorld = function(plane){
     this.onPlanet = false;
@@ -519,7 +495,19 @@ function Planet(xPos,yPos,zPos,r,g,b){
     onPlanet = false;
     world.remove(this.plane);
     world.remove(this.atmosphere);
-
+    console.log("removing ring");
+    if(this.ring){   
+      var index = rings.indexOf(this.ring);
+      //rings = rings.splice(index, 1);
+      //this.container.removeChild(this.ring);
+    }
+    console.log("removing container");
+    //world.remove(this.container);
+    var index = planets.indexOf(this);
+    //this.visible = false;
+    //planets = planets.splice(index, 1);
+    //world.setUserPosition(0,0,0) //dirty fix to fix the special effect
+    //world.setUserPosition(this.x,this.y,this.z)
   }
  
   //Code to check if the user is close enough to enter a planet 
@@ -572,6 +560,7 @@ function promptUser(planet){
     z: -100,
     width: 50,
     height:50,
+    asset: 'land',
     land: false,
     clickFunction: function(e){
       landOnPlanet = true;
@@ -646,75 +635,76 @@ function mainGame(){
   
 }
   
+  
+/*
+Function to reset the game
+*/
 function checkScore(){
   var player = world.getUserPosition();
-  if(amountOfForms == 3 || playerForms == 1){
+
+  if(amountOfForms == 3 || playerForms == 3){
+     console.log("resetting");
+  currentPlanet.removeWorld();
+    amountOfForms = 0;
+    playerForms = 0;
+    world.setUserPosition(0,0,0);
     var landPlane = new Plane({
     x: player.x,
     y: player.y,
     z: player.z-100,
     width: 50,
     height:50,
+    asset: 'land'
     //rotationX:-90
   })
 	
 	world.camera.holder.appendChild(landPlane.tag);
-	gameState++
 	
-	if(mouseIsPressed || touchIsDown){
-	  amountOfForms = 0;
-	  playerForms = 0;
-	  world.camera.holder.remove(landPlane.tag)
-	  gameState--;
-	}
+	
   }
 }
   
   
 function warp(thisBox){
+  ship.velocity = 0;
           // get the user's position
         var up = world.getUserPosition();
-        
+
         // get this box's position
         var ap = thisBox.getPosition();
-        console.log(up);
-        console.log(ap);
-        warpContainer = new Container3D({});
+
         // compute the difference between the two and arrange the warp container
         // to sit exactly between the user and the clicked box
-        
-        //HERE: This is where I think the error occurs. I console.logged the user, planet, and generated 3D container positions, and the container position doens't seem correct
-        //Thus, we warp in a weird direction. 
         var xDiff = abs(up.x - ap.x);
 
         if (ap.x < up.x) {
-          warpContainer.setX(ap.x + (0.5 * xDiff));
+          warpContainer.setX(ap.x + 0.5 * xDiff);
         } else {
-          warpContainer.setX(ap.x - (0.5 * xDiff));
+          warpContainer.setX(ap.x - 0.5 * xDiff);
         }
 
         var yDiff = abs(up.y - ap.y);
         if (ap.y < up.y) {
-          warpContainer.setY(ap.y + (0.5 * yDiff));
+          warpContainer.setY(ap.y + 0.5 * yDiff);
         } else {
-          warpContainer.setY(ap.y - (0.5 * yDiff));
+          warpContainer.setY(ap.y - 0.5 * yDiff);
         }
 
         var zDiff = abs(up.z - ap.z);
         if (ap.z < up.z) {
-          warpContainer.setZ(ap.z + (0.5 * zDiff));
+          warpContainer.setZ(ap.z + 0.5 * zDiff);
         } else {
-          warpContainer.setZ(ap.z - (0.5 * zDiff));
+          warpContainer.setZ(ap.z - 0.5 * zDiff);
         }
-        
-        console.log("Warp position: ");
-        console.log(warpContainer.getPosition());
+
 
         // force the warp container to face the clicked box (this will rotate it accordingly)
         warpContainer.tag.object3D.lookAt(thisBox.tag.object3D.position);
+        
 
         // compute the distance between the user and the clicked box
         var d = dist(ap.x, ap.y, ap.z, up.x, up.y, up.z);
+        console.log(d)
 
         // compute how big the warp cylinder needs to be to form a full "tunnel" between
         // the user and the clicked box
@@ -725,7 +715,7 @@ function warp(thisBox){
         warpCylinder.setOpacity(0);
 
         // compute how long it will take to get to the box
-        var timeToWarp = map(d, 0, 1000, 0, 2000);
+        var timeToWarp = map(d, 0, 1500, 0, 2000);
         var startWarpTime = millis();
 
         // now start a slide event
@@ -737,14 +727,15 @@ function warp(thisBox){
             }
             // second half of the jourly - the cylinder should fade out
             else {
-              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.005);
+              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.0005);
             }
           },
 
           // when the user arrives at the destination
           function() {
-            //HERE: We set toLand=true, so when the planet calculates the distance again it'll call its generateWorld() method
-            thisBox.toLand = true;
+            //onPlanet = true;
+            
+        //thisBox.toLand = true;
             warpCylinder.setOpacity(0);
             console.log("DONE");
           }
