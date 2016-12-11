@@ -359,7 +359,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
   /*
   Rings for planets, should they spin or not?
   */
-  if(ringProb > 90){
+  if(ringProb > 60){
     
     this.ring = new Ring({
     x:this.x,
@@ -735,7 +735,7 @@ function warp(thisBox){
           function() {
             //onPlanet = true;
             
-        //thisBox.toLand = true;
+        thisBox.toLand = true;
             warpCylinder.setOpacity(0);
             console.log("DONE");
           }
