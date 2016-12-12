@@ -3,11 +3,8 @@
  * Maz & Radhika 
  * /
 /* TODO: 
- * 
- * Removing a planet when an enemy gets it
  * (If we have time) add landing prompt, sun/stars, find wrap around
  * Start/ending/Game Over screens
- * 
  */
 
 // variable to hold a reference to our A-Frame world
@@ -24,14 +21,12 @@ var rings = [];
 var ship;
 var ufo;
 
-var gameState = 0;
 var onPlanet = false;
 var currentPlanet;
 
 var currentPosition;
 
 var amountOfForms = 0;
-var playerForms = 0;
 
 var lifeForms = [];
 var rocketSound;
@@ -49,12 +44,9 @@ function preload(){
 function setup() {
 	// no canvas needed
 	noCanvas();
-	
-	
-  //questionContainer.addChild(landPlane);
-   
-	// construct the A-Frame world
-	// this function requires a reference to the ID of the 'a-scene' tag in our HTML document
+
+	//construct the A-Frame world
+	//this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
 	
 	 // create a container to hold our warp system
@@ -87,7 +79,7 @@ function setup() {
     height:50,
     asset: 'land'
     //rotationX:-90
-  })
+  });
 	
 	//world.camera.holder.appendChild(landPlane.tag);
 
@@ -128,16 +120,36 @@ function setup() {
 
 
 function draw() {
-  checkScore();
-  if(gameState == 0){
+  // checkScore();
+  if(ufo.speciesCollected !== 4 && ship.speciesCollected !== 4){
     mainGame();
-  }
-  else{
-    
-  }
+  }else{
+    ship.velocity = 0; 
+    var asset; 
+    if(ufo.speciesCollected === 4){
+      asset = 'loss'
+    }else{
+      asset = 'win'
+    }
+    world.setUserPosition(0, 0, 0);
+    var user = world.getUserPosition();
+    var end = new Plane({
+      x: user.x,
+      y: user.y,
+      z: user.z - 100,
+      width: 150,
+      height: 100,
+      asset: asset    
+    });
+    world.add(end);
+    noLoop();
+}
   
 
 }
+/*
+Function to reset the game
+*/
 
 // function Star(x,y,z,r,g,b){
 //   this.x =x;
@@ -171,6 +183,7 @@ function Ship(){
   this.acceleration = 0.01;
   this.velocity = 0;
   this.pos = world.getUserPosition();
+  this.speciesCollected = 0; 
   
   this.x = this.pos.x;
   this.y = this.pos.y;
@@ -262,7 +275,7 @@ function updateUserScore(){
       z: ship.z-100,
       width: 20,
       height: 10,
-      asset: score_references[amountOfForms]
+      asset: score_references[ship.speciesCollected]
     });
     ship.scoreContainer.addChild(ship.user_score);
     console.log(ship.user_score.asset);
@@ -289,6 +302,7 @@ function Alien(xPos,yPos,zPos,modelName){
     var distance = dist(player.x,player.y,player.z,this.x,this.y,this.z);
     if(distance <10 && !this.visited){
       this.visited = true;
+      ship.speciesCollected++;
       amountOfForms++;
       world.remove(this.model);
       collected.play();
@@ -356,6 +370,7 @@ function Enemy(x,y,z){
   }
   this.collect = function(planet){
     this.speciesCollected++;
+    amountOfForms++;
     updateEnemyScore();
     console.log("Alien got a planet!");
     
@@ -585,7 +600,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
 
 function playSound(song){
   if(!song.isPlaying()){
-    // song.play();
+    song.play();
   }
 }
 
@@ -597,11 +612,6 @@ function stopSound(song){
 }
 
 function mainGame(){
-  
-  if(amountOfForms == 3){
-    gameState++;
-  }
-  
   playSound(bgm);
   ship.move();
   ufo.move();
@@ -643,31 +653,7 @@ function mainGame(){
 }
   
   
-/*
-Function to reset the game
-*/
-function checkScore(){
-  var player = world.getUserPosition();
 
-// if(amountOfForms == 3 || playerForms == 3){
-//     console.log("resetting");
-//   currentPlanet.removeWorld();
-//     amountOfForms = 0;
-//     playerForms = 0;
-//     world.setUserPosition(0,0,0);
-//     var landPlane = new Plane({
-//     x: player.x,
-//     y: player.y,
-//     z: player.z-100,
-//     width: 50,
-//     height:50,
-//     // asset: 'land'
-//     //rotationX:-90
-//   });
-	
-// 	world.camera.holder.appendChild(landPlane.tag);
-//   }
-}
   
   
 function warp(thisBox){
@@ -729,7 +715,7 @@ function warp(thisBox){
 
             // first half of the journey - the warp cylinder should fade in
             if (millis() < (startWarpTime + timeToWarp * 0.8)) {
-              warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.02);
+              warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.05);
             }
             // second half of the jourly - the cylinder should fade out
             else {
