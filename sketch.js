@@ -120,7 +120,6 @@ function setup() {
 
 
 function draw() {
-  // checkScore();
   if(ufo.speciesCollected !== 4 && ship.speciesCollected !== 4){
     mainGame();
   }else{
@@ -147,9 +146,6 @@ function draw() {
   
 
 }
-/*
-Function to reset the game
-*/
 
 // function Star(x,y,z,r,g,b){
 //   this.x =x;
@@ -253,32 +249,6 @@ function Ship(){
   }
   
   
-}
-function updateEnemyScore(){
-    console.log("UPDATING ENEMY SCORE TO: " + score_references[ufo.speciesCollected]);
-    ship.scoreContainer.removeChild(ship.alien_score);
-    ship.alien_score = new Plane({
-      x: ship.x - 100,
-      y: ship.y + 70,
-      z: ship.z - 100,
-      width: 20,
-      height: 10,
-      asset: score_references[ufo.speciesCollected]
-    });
-    ship.scoreContainer.addChild(ship.alien_score);
-}
-function updateUserScore(){
-    ship.scoreContainer.removeChild(ship.user_score);
-    ship.user_score = new Plane({
-      x: ship.x - 100,
-      y: ship.y + 60,
-      z: ship.z-100,
-      width: 20,
-      height: 10,
-      asset: score_references[ship.speciesCollected]
-    });
-    ship.scoreContainer.addChild(ship.user_score);
-    console.log(ship.user_score.asset);
 }
 
 
@@ -598,6 +568,21 @@ function Planet(xPos,yPos,zPos,r,g,b){
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function playSound(song){
   if(!song.isPlaying()){
     song.play();
@@ -651,7 +636,33 @@ function mainGame(){
 
   
 }
-  
+function updateEnemyScore(){
+  console.log("UPDATING ENEMY SCORE TO: " + score_references[ufo.speciesCollected]);
+  ship.scoreContainer.removeChild(ship.alien_score);
+  ship.alien_score = new Plane({
+    x: ship.x - 100,
+    y: ship.y + 70,
+    z: ship.z - 100,
+    width: 20,
+    height: 10,
+    asset: score_references[ufo.speciesCollected]
+  });
+  ship.scoreContainer.addChild(ship.alien_score);
+}
+function updateUserScore(){
+  ship.scoreContainer.removeChild(ship.user_score);
+  ship.user_score = new Plane({
+    x: ship.x - 100,
+    y: ship.y + 60,
+    z: ship.z-100,
+    width: 20,
+    height: 10,
+    asset: score_references[ship.speciesCollected]
+  });
+  ship.scoreContainer.addChild(ship.user_score);
+  console.log(ship.user_score.asset);
+}
+
   
 
   
@@ -734,7 +745,4 @@ function warp(thisBox){
           }
 
         );
-
-
-  
 }
