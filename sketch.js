@@ -700,7 +700,8 @@ function checkScore(){
   
   
 function warp(thisBox){
-  ship.velocity = 0;
+        ship.scoreContainer.hide();
+        ship.velocity = 0;
           // get the user's position
         var up = world.getUserPosition();
 
@@ -756,7 +757,7 @@ function warp(thisBox){
         world.slideToObject(thisBox, timeToWarp, function() {
 
             // first half of the journey - the warp cylinder should fade in
-            if (millis() < startWarpTime + timeToWarp * 0.8) {
+            if (millis() < (startWarpTime + timeToWarp * 0.8)) {
               warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.02);
             }
             // second half of the jourly - the cylinder should fade out
@@ -769,8 +770,9 @@ function warp(thisBox){
           function() {
             //onPlanet = true;
             
-        thisBox.toLand = true;
+            thisBox.toLand = true;
             warpCylinder.setOpacity(0);
+             ship.scoreContainer.show();
             console.log("DONE");
           }
 
