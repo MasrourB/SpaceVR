@@ -1,10 +1,7 @@
 /**
  * Space VR Explorer 
  * Maz & Radhika 
- * 
- * 
  * /
-
 /* TODO: 
  * 
  * Removing a planet when an enemy gets it
@@ -118,8 +115,7 @@ function setup() {
 
   	// add the container to the world
   	world.add(planet.container);
-  
-    	planets.push(planet);
+  	planets.push(planet);
     		// add the box to the world
     		//world.add(b);
     	}
@@ -143,36 +139,33 @@ function draw() {
 
 }
 
-
-function Star(x,y,z,r,g,b){
-  this.x =x;
-  this.y = y;
-  this.z=z;
-  this.r=random(255);
-  this.g=random(255);
-  this.b=random(255);
+// function Star(x,y,z,r,g,b){
+//   this.x =x;
+//   this.y = y;
+//   this.z=z;
+//   this.r=random(255);
+//   this.g=random(255);
+//   this.b=random(255);
   
-  this.xOffset = random(1000);
-	this.zOffset = random(2000, 3000);
+//   this.xOffset = random(1000);
+// 	this.zOffset = random(2000, 3000);
 	
-	this.lifeSpan = random(200,300);
+// 	this.lifeSpan = random(200,300);
   
-  this.body = new Sphere({
-    x:this.x,
-    y:this.y,
-    z:this.z,
-    red: this.r,
-    green: this.g,
-    blue: this.b,
-    radius:30,
-    metalness:0.25
-  });
+//   this.body = new Sphere({
+//     x:this.x,
+//     y:this.y,
+//     z:this.z,
+//     red: this.r,
+//     green: this.g,
+//     blue: this.b,
+//     radius:30,
+//     metalness:0.25
+//   });
   
-  world.add(this.body);
+//   world.add(this.body);
   
-  
-  
-}
+// }
 
 function Ship(){
   this.acceleration = 0.01;
@@ -182,6 +175,8 @@ function Ship(){
   this.x = this.pos.x;
   this.y = this.pos.y;
   this.z = this.pos.z;
+  
+  //SCORING CONTAINER
   this.scoreContainer = new Container3D({x:this.x, y:this.y, z:this.z});
   this.user_label = new Plane({
     x: this.x - 120,
@@ -220,7 +215,8 @@ function Ship(){
   this.scoreContainer.addChild(this.alien_score);
   this.scoreContainer.addChild(this.alien_label);
   world.camera.holder.appendChild(this.scoreContainer.tag);
-  console.log("Added plane!");
+  
+  
   this.move = function(){
     if(!onPlanet){
       if (mouseIsPressed || touchIsDown) {
@@ -245,6 +241,33 @@ function Ship(){
   
   
 }
+function updateEnemyScore(){
+    console.log("UPDATING ENEMY SCORE TO: " + score_references[ufo.speciesCollected]);
+    ship.scoreContainer.removeChild(ship.alien_score);
+    ship.alien_score = new Plane({
+      x: ship.x - 100,
+      y: ship.y + 70,
+      z: ship.z - 100,
+      width: 20,
+      height: 10,
+      asset: score_references[ufo.speciesCollected]
+    });
+    ship.scoreContainer.addChild(ship.alien_score);
+}
+function updateUserScore(){
+    ship.scoreContainer.removeChild(ship.user_score);
+    ship.user_score = new Plane({
+      x: ship.x - 100,
+      y: ship.y + 60,
+      z: ship.z-100,
+      width: 20,
+      height: 10,
+      asset: score_references[amountOfForms]
+    });
+    ship.scoreContainer.addChild(ship.user_score);
+    console.log(ship.user_score.asset);
+}
+
 
 function Alien(xPos,yPos,zPos,modelName){
   this.x = xPos;
@@ -253,12 +276,11 @@ function Alien(xPos,yPos,zPos,modelName){
   this.visited = false;
   
   this.xOffset = random(1000);
-	this.zOffset = random(2000, 3000);
+	this.zOffset = random(1000, 2000);
   
   this.modelName = modelName;
   
   this.model = new DAE({asset:this.modelName, x:this.x, y:this.y,z:this.z});
-  
   world.add(this.model);
   lifeForms.push(this);
   
@@ -270,30 +292,23 @@ function Alien(xPos,yPos,zPos,modelName){
       amountOfForms++;
       world.remove(this.model);
       collected.play();
+      updateUserScore();
       console.log("got");
       
     }
   }
-  
-  
   this.displayForm = function(){
       world.add(this.model)
       lifeForms.push(this)
-    
   }
-  
-  //TODO: Get movement working by Perlin Noise here
+  //TODO: fix perlin noise 
   this.move = function(){
-    
-    var xMovement = map( noise(this.xOffset), 0, 1, -0.005, 0.005);
-		var zMovement = map( noise(this.zOffset), 0, 1, -0.005, 0.005);
-		
+    var xMovement = map( noise(this.xOffset), 0, 1, -0.05, 0.05);
+		var zMovement = map( noise(this.zOffset), 0, 1, -0.05, 0.05);
 		this.xOffset += 0.01;
 		this.zOffset += 0.01;
 		console.log(this.model.z)
-		
-		this.model.nudge(xMovement,this.y,zMovement);
-    
+		this.model.nudge(xMovement,0,zMovement);
   }
 }
 
@@ -333,8 +348,7 @@ function Enemy(x,y,z){
     this.prevZ = randomZ; 
     for(var i = 0; i < planets.length; i++){
       var planet = planets[i];
-      if(dist(this.model.x, this.model.y, this.model.z, planet.body.x, planet.body.y, planet.body.z) < 100){
-        console.log("Alien is near planet!");
+      if(dist(this.model.x, this.model.y, this.model.z, planet.body.x, planet.body.y, planet.body.z) < 100 && planet.container.getVisibility()){
         this.collect(planet);
       }
     }
@@ -342,22 +356,23 @@ function Enemy(x,y,z){
   }
   this.collect = function(planet){
     this.speciesCollected++;
+    updateEnemyScore();
     console.log("Alien got a planet!");
-    console.log("removing ring");
+    
+    //toggle visibility
     if(planet.ring){   
-      var index = rings.indexOf(planet.ring);
-      //rings = rings.splice(index, 1);
-      //planet.container.removeChild(this.ring);
+      planet.ring.hide();
     }
-    console.log("removing container");
-    //world.remove(planet.container);
-    var index = planets.indexOf(planet);
-    //planets = planets.splice(index, 1);
+    planet.body.hide();
+    planet.container.hide();
+
+    //change direction of ufo's travel 
     this.prevX = random(-2,2);
     this.prevY = random(-2,2);
     this.prevZ = random(-2,2);
   }
 }
+
 
 
 function Planet(xPos,yPos,zPos,r,g,b){
@@ -411,11 +426,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
   this.container.addChild(this.ring);
   // world.add(this.ring)
   rings.push(this.ring);
-    
+  this.ring.show();
   }
-  
-  
-  
   
   this.body = new Sphere({
     x:this.x,
@@ -433,12 +445,13 @@ function Planet(xPos,yPos,zPos,r,g,b){
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
-      
-      warp(e)
-      
+      if(e.getVisibility()){
+        warp(e);
+      }
     }
   });
   this.container.addChild(this.body);
+  this.body.show();
   world.add(this.container);
   
   this.addObj = function(obj){
@@ -495,7 +508,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
 						repeatX: 100,
 						repeatY: 100,
 						rotationX:-90
-					   });
+		});
 					   
 		this.displayLife();
 		//remove the planet and its ring from the world so it doesn't show up when you're on the plane 
@@ -552,16 +565,8 @@ function Planet(xPos,yPos,zPos,r,g,b){
     this.distance = distance;
     
     if(this.body.toLand && world.getFlying() && !this.visited){
-      //if(this.containsLife){
-        //console.log("NEAR PLANET");
-        //ship.velocity = 0;
-        //promptUser(this);
-        currentPlanet = this;
-        //world.setUserPosition(this.x,this.y+2,this.z) //Teleports user to the planet currently
-       // warp(this.body);
-       this.generateWorld();
-         //TODO: move this into the 'land' graphic's click function. 
-      //}
+      currentPlanet = this;
+      this.generateWorld();
     }else if(onPlanet && this.onPlanet && this.distance > 100){ //remove plane when the user moves away from it 
       console.log("off planet");  
       this.removeWorld(this.plane);
@@ -573,46 +578,14 @@ function Planet(xPos,yPos,zPos,r,g,b){
     this.body.spinY(num);
     this.body.spinX(num);
     if(this.ring){
-      //this.ring.spinY(num);
-    this.ring.spinY(num);
-      
+      this.ring.spinY(num);
     }
-    
   }
-}
-
-
-//prompt the user and ask them if they want to 'land' on the planet or not 
-//right now, they land whether or not they want to 
-function promptUser(planet){
-  ship.velocity =0;
-  var player = world.getUserPosition();
-	
-	landPlane = new Plane({
-    x: player.x,
-    y: player.y,
-    z: -100,
-    width: 50,
-    height:50,
-    asset: 'land',
-    land: false,
-    clickFunction: function(e){
-      landOnPlanet = true;
-    }
-    //rotationX:-90
-  })
-	
-	world.camera.holder.appendChild(landPlane.tag);
-
-  
 }
 
 function playSound(song){
-  if(song.isPlaying()){
-    //song.stop();
-  }
-  else{
-    song.play();
+  if(!song.isPlaying()){
+    // song.play();
   }
 }
 
@@ -676,26 +649,24 @@ Function to reset the game
 function checkScore(){
   var player = world.getUserPosition();
 
-  if(amountOfForms == 3 || playerForms == 3){
-     console.log("resetting");
-  currentPlanet.removeWorld();
-    amountOfForms = 0;
-    playerForms = 0;
-    world.setUserPosition(0,0,0);
-    var landPlane = new Plane({
-    x: player.x,
-    y: player.y,
-    z: player.z-100,
-    width: 50,
-    height:50,
-    // asset: 'land'
-    //rotationX:-90
-  });
+// if(amountOfForms == 3 || playerForms == 3){
+//     console.log("resetting");
+//   currentPlanet.removeWorld();
+//     amountOfForms = 0;
+//     playerForms = 0;
+//     world.setUserPosition(0,0,0);
+//     var landPlane = new Plane({
+//     x: player.x,
+//     y: player.y,
+//     z: player.z-100,
+//     width: 50,
+//     height:50,
+//     // asset: 'land'
+//     //rotationX:-90
+//   });
 	
-	world.camera.holder.appendChild(landPlane.tag);
-	
-	
-  }
+// 	world.camera.holder.appendChild(landPlane.tag);
+//   }
 }
   
   
