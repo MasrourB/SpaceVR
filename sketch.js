@@ -7,14 +7,9 @@
 
 /* TODO: 
  * 
- * Alien enemy (UFO)****
- * When the plane is created, the planet is still on the map (splice the planets array to remove it, and when user leaves plane, put the planet back in)
  * Removing a planet when an enemy gets it
- * Warp speed special effects via cylinder
- * Deceleration
  * (If we have time) add landing prompt, sun/stars, find wrap around
  * Start/ending/Game Over screens
- * Add plane to user camera for counter (semi-transparent)
  * 
  */
 
@@ -24,7 +19,8 @@ var acceleration = 0.01;
 var velocity = 0;
 var landOnPlanet = false;
 var closeEnough = false;
-
+//this is for asset tag management for keeping track of scores in the user plane in front of the camera
+var score_references = ["zero", "one", "two", "three", "four"];
 //var universe = '#';
 var planets = [];
 var rings = [];
@@ -186,7 +182,45 @@ function Ship(){
   this.x = this.pos.x;
   this.y = this.pos.y;
   this.z = this.pos.z;
-  
+  this.scoreContainer = new Container3D({x:this.x, y:this.y, z:this.z});
+  this.user_label = new Plane({
+    x: this.x - 120,
+    y: this.y + 60,
+    z: this.z-100,
+    width: 20,
+    height: 10,
+    asset: 'user_score'    
+  });
+  this.user_score = new Plane({
+    x: this.x - 100,
+    y: this.y + 60,
+    z: this.z-100,
+    width: 20,
+    height: 10,
+    asset: 'zero'
+  });
+  this.alien_label = new Plane({
+    x: this.x - 120,
+    y: this.y + 70,
+    z: this.z-100,
+    width: 20,
+    height: 10,
+    asset: 'alien_score'    
+  });
+  this.alien_score = new Plane({
+    x: this.x - 100,
+    y: this.y + 70,
+    z: this.z-100,
+    width: 20,
+    height: 10,
+    asset: 'zero'    
+  });
+  this.scoreContainer.addChild(this.user_score);
+  this.scoreContainer.addChild(this.user_label);
+  this.scoreContainer.addChild(this.alien_score);
+  this.scoreContainer.addChild(this.alien_label);
+  world.camera.holder.appendChild(this.scoreContainer.tag);
+  console.log("Added plane!");
   this.move = function(){
     if(!onPlanet){
       if (mouseIsPressed || touchIsDown) {
@@ -578,7 +612,7 @@ function playSound(song){
     //song.stop();
   }
   else{
-    song.play();
+    // song.play();
   }
 }
 
@@ -654,9 +688,9 @@ function checkScore(){
     z: player.z-100,
     width: 50,
     height:50,
-    asset: 'land'
+    // asset: 'land'
     //rotationX:-90
-  })
+  });
 	
 	world.camera.holder.appendChild(landPlane.tag);
 	
