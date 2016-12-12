@@ -1,14 +1,7 @@
 /**
  * Space VR Explorer 
  * Maz & Radhika 
- * /
-/* TODO: 
- * 
- * Removing a planet when an enemy gets it
- * (If we have time) add landing prompt, sun/stars, find wrap around
- * Start/ending/Game Over screens
- * 
- */
+ **/
 
 // variable to hold a reference to our A-Frame world
 var world;
@@ -136,8 +129,7 @@ function setup() {
 function draw() {
   if(gameState == 0){
     mainGame();
-  }
-  else{
+  }else{
     if(!gameOver){
       time = millis();
       console.log("over")
@@ -154,13 +146,13 @@ function draw() {
     rotationX: 0
    });
 	
- 	world.camera.holder.appendChild(landPlane.tag);
-    }
+  	world.camera.holder.appendChild(landPlane.tag);
+  }
     gameOver = true;
     var curTime = millis();
     var wait = millis() -time
     console.log(wait)
-    if((mouseIsPressed || touchIsDown) && (wait >500)){
+    if((mouseIsPressed || touchIsDown) && (wait >1000)){
       gameOver = false;
       world.camera.holder.remove(landPlane.tag)
       amountOfForms = 0;
@@ -301,7 +293,6 @@ function updateUserScore(){
       asset: score_references[amountOfForms]
     });
     ship.scoreContainer.addChild(ship.user_score);
-    console.log(ship.user_score.asset);
 }
 
 
@@ -343,7 +334,6 @@ function Alien(xPos,yPos,zPos,modelName){
 		var zMovement = map( noise(this.zOffset), 0, 1, -0.05, 0.05);
 		this.xOffset += 0.01;
 		this.zOffset += 0.01;
-		console.log(this.model.z)
 		this.model.nudge(xMovement,0,zMovement);
   }
 }
@@ -481,7 +471,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     toLand : false,
     radius:this.radius,
     clickFunction : function(e){
-      if(e.getVisibility()){
+      if(e.getVisibility() && !onPlanet){
         warp(e);
       }
     }
@@ -637,7 +627,6 @@ function mainGame(){
   if(amountOfForms == 3 || ufo.speciesCollected == 3){
     if(gameState == 0){
       gameState++;
-      console.log(gameState)
     }
   }
   
@@ -778,7 +767,7 @@ function warp(thisBox){
 
           // when the user arrives at the destination
           function() {
-            //onPlanet = true;
+            onPlanet = true;
             
             thisBox.toLand = true;
             warpCylinder.setOpacity(0);
