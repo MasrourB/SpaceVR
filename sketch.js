@@ -150,11 +150,10 @@ function draw() {
   }
     gameOver = true;
     var curTime = millis();
-    var wait = millis() -time
-    console.log(wait)
+    var wait = millis() -time;
     if((mouseIsPressed || touchIsDown) && (wait >1000)){
       gameOver = false;
-      world.camera.holder.remove(landPlane.tag)
+      world.camera.holder.remove(landPlane.tag);
       amountOfForms = 0;
       ufo.speciesCollected = 0;
       updateEnemyScore();
@@ -719,7 +718,4 @@ function warp(thisBox){
           }
 
         );
-
-
-  
 }
