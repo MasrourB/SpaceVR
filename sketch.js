@@ -23,6 +23,10 @@ var planets = [];
 var rings = [];
 var ship;
 var ufo;
+var player;
+var gameOver = false;
+
+var time;
 
 var gameState = 0;
 var onPlanet = false;
@@ -36,6 +40,8 @@ var playerForms = 0;
 var lifeForms = [];
 var rocketSound;
 var collected; 
+
+var landPlane;
 
 
 var warpCylinder, warpContainer;
@@ -77,7 +83,7 @@ function setup() {
   warpContainer.addChild(warpCylinder);
   world.add(warpContainer);
 	
-	var player = world.getUserPosition();
+	player = world.getUserPosition();
 	
 	var landPlane = new Plane({
     x: player.x,
@@ -128,11 +134,41 @@ function setup() {
 
 
 function draw() {
-  checkScore();
   if(gameState == 0){
     mainGame();
   }
   else{
+    if(!gameOver){
+      time = millis();
+      console.log("over")
+      world.setUserPosition(0,0,0);
+      currentPlanet.removeWorld();
+      var cur = world.getUserPosition();
+     landPlane = new Plane({
+     x: cur.x,
+    y: cur.y,
+     z: cur.z-90,
+     width: 100,
+     height:50,
+     asset: 'continue',
+    rotationX: 0
+   });
+	
+ 	world.camera.holder.appendChild(landPlane.tag);
+    }
+    gameOver = true;
+    var curTime = millis();
+    var wait = millis() -time
+    console.log(wait)
+    if((mouseIsPressed || touchIsDown) && (wait >500)){
+      gameOver = false;
+      world.camera.holder.remove(landPlane.tag)
+      amountOfForms = 0;
+      ufo.speciesCollected = 0;
+      updateEnemyScore();
+      updateUserScore();
+      gameState--;
+    }
     
   }
   
@@ -598,8 +634,11 @@ function stopSound(song){
 
 function mainGame(){
   
-  if(amountOfForms == 3){
-    gameState++;
+  if(amountOfForms == 3 || ufo.speciesCollected == 3){
+    if(gameState == 0){
+      gameState++;
+      console.log(gameState)
+    }
   }
   
   playSound(bgm);
