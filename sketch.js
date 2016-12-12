@@ -140,8 +140,8 @@ function draw() {
      x: cur.x,
     y: cur.y,
      z: cur.z-90,
-     width: 100,
-     height:50,
+     width: 40,
+     height:30,
      asset: 'continue',
     rotationX: 0
    });
@@ -163,37 +163,8 @@ function draw() {
     }
     
   }
-  
-
 }
 
-// function Star(x,y,z,r,g,b){
-//   this.x =x;
-//   this.y = y;
-//   this.z=z;
-//   this.r=random(255);
-//   this.g=random(255);
-//   this.b=random(255);
-  
-//   this.xOffset = random(1000);
-// 	this.zOffset = random(2000, 3000);
-	
-// 	this.lifeSpan = random(200,300);
-  
-//   this.body = new Sphere({
-//     x:this.x,
-//     y:this.y,
-//     z:this.z,
-//     red: this.r,
-//     green: this.g,
-//     blue: this.b,
-//     radius:30,
-//     metalness:0.25
-//   });
-  
-//   world.add(this.body);
-  
-// }
 
 function Ship(){
   this.acceleration = 0.01;
@@ -611,7 +582,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
 
 function playSound(song){
   if(!song.isPlaying()){
-    // song.play();
+    song.play();
   }
 }
 
@@ -669,34 +640,6 @@ function mainGame(){
 
   
 }
-  
-  
-/*
-Function to reset the game
-*/
-function checkScore(){
-  var player = world.getUserPosition();
-
-// if(amountOfForms == 3 || playerForms == 3){
-//     console.log("resetting");
-//   currentPlanet.removeWorld();
-//     amountOfForms = 0;
-//     playerForms = 0;
-//     world.setUserPosition(0,0,0);
-//     var landPlane = new Plane({
-//     x: player.x,
-//     y: player.y,
-//     z: player.z-100,
-//     width: 50,
-//     height:50,
-//     // asset: 'land'
-//     //rotationX:-90
-//   });
-	
-// 	world.camera.holder.appendChild(landPlane.tag);
-//   }
-}
-  
   
 function warp(thisBox){
         ship.scoreContainer.hide();
