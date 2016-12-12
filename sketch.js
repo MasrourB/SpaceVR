@@ -612,7 +612,7 @@ function playSound(song){
     //song.stop();
   }
   else{
-    // song.play();
+    song.play();
   }
 }
 
