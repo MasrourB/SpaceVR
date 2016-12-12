@@ -1,13 +1,14 @@
-/**
- * Space VR Explorer 
+/* Space VR Explorer 
  * Maz & Radhika 
  * /
+ 
+ 
 /* TODO: 
  * (If we have time) add landing prompt, sun/stars, find wrap around
  * Start/ending/Game Over screens
  */
 
-// variable to hold a reference to our A-Frame world
+//-----------GLOBAL VARIABLES-----------// 
 var world;
 var acceleration = 0.01;
 var velocity = 0;
@@ -35,6 +36,7 @@ var collected;
 
 var warpCylinder, warpContainer;
 
+//-----------P5 FUNCTIONS-----------// 
 function preload(){
   rocketSound = loadSound('sfx/rocket.mp3');
   bgm = loadSound('music/moon.mp3');
@@ -42,16 +44,11 @@ function preload(){
 }
 
 function setup() {
-	// no canvas needed
 	noCanvas();
-
-	//construct the A-Frame world
-	//this function requires a reference to the ID of the 'a-scene' tag in our HTML document
 	world = new World('VRScene');
 	
-	 // create a container to hold our warp system
+	//WARP
   warpContainer = new Container3D({});
-
   // create a cylinder inside of the warp container
   warpCylinder = new Cone({
     x: 0,
@@ -69,60 +66,47 @@ function setup() {
   warpContainer.addChild(warpCylinder);
   world.add(warpContainer);
 	
+	//player setup
 	var player = world.getUserPosition();
 	
-	var landPlane = new Plane({
-    x: player.x,
-    y: player.y,
-    z: -100,
-    width: 50,
-    height:50,
-    asset: 'land'
-    //rotationX:-90
-  });
-	
-	//world.camera.holder.appendChild(landPlane.tag);
-
 	world.setFlying(true);
 
+  //generate planets
 	for (var i = 0; i < 200; i++) {
-		// pick a location
-		var x = random(-random(2000), random(2000));
-		var y = random(-random(2000),random(2000));
-		var z = random(-random(2000), random(2000));
-		
-		//make sure a planet isn't generate right next to the user 
-    while((x < 100 && x > -100) || (y < 100 && y > -100) || (z < 100 && z > -100)){
-      x = random(-random(2000), random(2000));
-      y = random(-random(2000),random(2000));
-      z = random(-random(2000), random(2000));  
-    }
-		
-		var r = random(255);
-		var g = random(255);
-		var b = random(255);
-
-		var container = new Container3D({x:x, y:y, z:z});
-		var planet = new Planet(x,y,z,r,g,b);
-
-  	// add the container to the world
-  	world.add(planet.container);
-  	planets.push(planet);
-    		// add the box to the world
-    		//world.add(b);
-    	}
+  		// pick a location
+  		var x = random(-random(2000), random(2000));
+  		var y = random(-random(2000),random(2000));
+  		var z = random(-random(2000), random(2000));
+  		
+  		//make sure a planet isn't generate right next to the user 
+      while((x < 100 && x > -100) || (y < 100 && y > -100) || (z < 100 && z > -100)){
+        x = random(-random(2000), random(2000));
+        y = random(-random(2000),random(2000));
+        z = random(-random(2000), random(2000));  
+      }
+  		
+  		var r = random(255);
+  		var g = random(255);
+  		var b = random(255);
+  
+  		var container = new Container3D({x:x, y:y, z:z});
+  		var planet = new Planet(x,y,z,r,g,b);
+  
+    	// add the container to the world
+    	world.add(planet.container);
+    	planets.push(planet);
+  }
   
     ship = new Ship();
     ufo = new Enemy(player.x, player.y, player.z - 500);
     
 }
 
-
-
 function draw() {
+  //Score check 
   if(ufo.speciesCollected !== 4 && ship.speciesCollected !== 4){
     mainGame();
-  }else{
+  }else{//display win or lose plane 
     ship.velocity = 0; 
     var asset; 
     if(ufo.speciesCollected === 4){
@@ -175,6 +159,7 @@ function draw() {
   
 // }
 
+//-----------OBJECT ORIENTED FUNCTIONS-----------// 
 function Ship(){
   this.acceleration = 0.01;
   this.velocity = 0;
@@ -233,25 +218,17 @@ function Ship(){
         playSound(rocketSound);
         this.velocity += this.acceleration;
       }
-      
-		//var pos = world.getUserPosition();
-		//world.setUserPosition(pos.x,pos.y+1,pos.z)
 	  }
 	  world.moveUserForward(this.velocity);
-      
-    }
-    else{
+    }else{
       if(mouseIsPressed || touchIsDown){
         world.moveUserForward(1);
       }
     }
-    
   }
-  
-  
 }
 
-
+//Represents a DAE object for its interaction with both the enemy and the player
 function Alien(xPos,yPos,zPos,modelName){
   this.x = xPos;
   this.y = yPos;
@@ -281,6 +258,7 @@ function Alien(xPos,yPos,zPos,modelName){
       
     }
   }
+  
   this.displayForm = function(){
       world.add(this.model)
       lifeForms.push(this)
@@ -291,12 +269,11 @@ function Alien(xPos,yPos,zPos,modelName){
 		var zMovement = map( noise(this.zOffset), 0, 1, -0.05, 0.05);
 		this.xOffset += 0.01;
 		this.zOffset += 0.01;
-		console.log(this.model.z)
 		this.model.nudge(xMovement,0,zMovement);
   }
 }
 
-//Enemy class
+//Enemy UFO 
 function Enemy(x,y,z){
   this.x = x;
   this.y = y;
@@ -336,8 +313,8 @@ function Enemy(x,y,z){
         this.collect(planet);
       }
     }
-
   }
+  
   this.collect = function(planet){
     this.speciesCollected++;
     amountOfForms++;
@@ -359,7 +336,7 @@ function Enemy(x,y,z){
 }
 
 
-
+//Represents a planet with life 
 function Planet(xPos,yPos,zPos,r,g,b){
   this.x = xPos;
   this.y = yPos;
@@ -394,24 +371,22 @@ function Planet(xPos,yPos,zPos,r,g,b){
   Rings for planets, should they spin or not?
   */
   if(ringProb > 60){
-    
     this.ring = new Ring({
-    x:this.x,
-    y:this.y,
-    z:this.z,
-    red:255,
-    green:255,
-    blue:255,
-    opacity:0.3,
-    rotationX:45,
-    //rotationY:45,
-    radiusInner:this.radius+10,
-    radiusOuter:this.radius+20
-  })
-  this.container.addChild(this.ring);
-  // world.add(this.ring)
-  rings.push(this.ring);
-  this.ring.show();
+      x:this.x,
+      y:this.y,
+      z:this.z,
+      red:255,
+      green:255,
+      blue:255,
+      opacity:0.3,
+      rotationX:45,
+      //rotationY:45,
+      radiusInner:this.radius+10,
+      radiusOuter:this.radius+20
+     });
+     this.container.addChild(this.ring);
+     rings.push(this.ring);
+     this.ring.show();
   }
   
   this.body = new Sphere({
@@ -471,15 +446,10 @@ function Planet(xPos,yPos,zPos,r,g,b){
       }
       
       var myDAE = new Alien(xPos,2,zPos,name);
-      //var myDAE = new DAE({asset:'model1', x:this.x, y:this.y+2,z:this.z+10});
-      //myDAE.displayForm()
-      //lifeForms.push(myDAE)
-    //}
   }
   
   this.generateWorld = function(){
     stopSound(rocketSound);
-    //this.world = new World('VRScene');
     console.log("SETTING UP WORLD");
     onPlanet = true;
     this.visited = true;
@@ -515,29 +485,26 @@ function Planet(xPos,yPos,zPos,r,g,b){
       opacity:0.6,
       asset:'planetSky',
       roughness:0.7
-    })
+    });
     world.add(this.atmosphere);
     
     var pos = world.getUserPosition();
     world.setUserPosition(this.plane.x,this.plane.y+3,this.plane.z)
-}
+  }
+  
   this.removeWorld = function(plane){
     this.onPlanet = false;
     world.setFlying(true);
     onPlanet = false;
     world.remove(this.plane);
     world.remove(this.atmosphere);
-    console.log("removing ring");
+    
+    //toggle visibility
     if(this.ring){   
-      var index = rings.indexOf(this.ring);
-      //rings = rings.splice(index, 1);
-      //this.container.removeChild(this.ring);
+      this.ring.hide();
     }
-    console.log("removing container");
-    //world.remove(this.container);
-    var index = planets.indexOf(this);
-    //this.visible = false;
-    //planets = planets.splice(index, 1);
+    this.body.hide();
+    this.container.hide();
     //world.setUserPosition(0,0,0) //dirty fix to fix the special effect
     //world.setUserPosition(this.x,this.y,this.z)
   }
@@ -558,7 +525,6 @@ function Planet(xPos,yPos,zPos,r,g,b){
     }
     
   }
-  
   this.spin = function(num){
     this.body.spinY(num);
     this.body.spinX(num);
@@ -567,22 +533,7 @@ function Planet(xPos,yPos,zPos,r,g,b){
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//-----------HELPER FUNCTIONS-----------//
 function playSound(song){
   if(!song.isPlaying()){
     song.play();
@@ -663,86 +614,82 @@ function updateUserScore(){
   console.log(ship.user_score.asset);
 }
 
-  
-
-  
-  
 function warp(thisBox){
-        ship.scoreContainer.hide();
-        ship.velocity = 0;
-          // get the user's position
-        var up = world.getUserPosition();
+  ship.scoreContainer.hide();
+  ship.velocity = 0;
+    // get the user's position
+  var up = world.getUserPosition();
 
-        // get this box's position
-        var ap = thisBox.getPosition();
+  // get this box's position
+  var ap = thisBox.getPosition();
 
-        // compute the difference between the two and arrange the warp container
-        // to sit exactly between the user and the clicked box
-        var xDiff = abs(up.x - ap.x);
+  // compute the difference between the two and arrange the warp container
+  // to sit exactly between the user and the clicked box
+  var xDiff = abs(up.x - ap.x);
 
-        if (ap.x < up.x) {
-          warpContainer.setX(ap.x + 0.5 * xDiff);
-        } else {
-          warpContainer.setX(ap.x - 0.5 * xDiff);
-        }
+  if (ap.x < up.x) {
+    warpContainer.setX(ap.x + 0.5 * xDiff);
+  } else {
+    warpContainer.setX(ap.x - 0.5 * xDiff);
+  }
 
-        var yDiff = abs(up.y - ap.y);
-        if (ap.y < up.y) {
-          warpContainer.setY(ap.y + 0.5 * yDiff);
-        } else {
-          warpContainer.setY(ap.y - 0.5 * yDiff);
-        }
+  var yDiff = abs(up.y - ap.y);
+  if (ap.y < up.y) {
+    warpContainer.setY(ap.y + 0.5 * yDiff);
+  } else {
+    warpContainer.setY(ap.y - 0.5 * yDiff);
+  }
 
-        var zDiff = abs(up.z - ap.z);
-        if (ap.z < up.z) {
-          warpContainer.setZ(ap.z + 0.5 * zDiff);
-        } else {
-          warpContainer.setZ(ap.z - 0.5 * zDiff);
-        }
+  var zDiff = abs(up.z - ap.z);
+  if (ap.z < up.z) {
+    warpContainer.setZ(ap.z + 0.5 * zDiff);
+  } else {
+    warpContainer.setZ(ap.z - 0.5 * zDiff);
+  }
 
 
-        // force the warp container to face the clicked box (this will rotate it accordingly)
-        warpContainer.tag.object3D.lookAt(thisBox.tag.object3D.position);
-        
+  // force the warp container to face the clicked box (this will rotate it accordingly)
+  warpContainer.tag.object3D.lookAt(thisBox.tag.object3D.position);
+  
 
-        // compute the distance between the user and the clicked box
-        var d = dist(ap.x, ap.y, ap.z, up.x, up.y, up.z);
-        console.log(d)
+  // compute the distance between the user and the clicked box
+  var d = dist(ap.x, ap.y, ap.z, up.x, up.y, up.z);
+  console.log(d)
 
-        // compute how big the warp cylinder needs to be to form a full "tunnel" between
-        // the user and the clicked box
-        var newScale = d / 10;
-        warpCylinder.setScaleY(newScale);
+  // compute how big the warp cylinder needs to be to form a full "tunnel" between
+  // the user and the clicked box
+  var newScale = d / 10;
+  warpCylinder.setScaleY(newScale);
 
-        // make the warp cylinder invisible 
-        warpCylinder.setOpacity(0);
+  // make the warp cylinder invisible 
+  warpCylinder.setOpacity(0);
 
-        // compute how long it will take to get to the box
-        var timeToWarp = map(d, 0, 1500, 0, 2500);
-        var startWarpTime = millis();
+  // compute how long it will take to get to the box
+  var timeToWarp = map(d, 0, 1500, 0, 2500);
+  var startWarpTime = millis();
 
-        // now start a slide event
-        world.slideToObject(thisBox, timeToWarp, function() {
+  // now start a slide event
+  world.slideToObject(thisBox, timeToWarp, function() {
 
-            // first half of the journey - the warp cylinder should fade in
-            if (millis() < (startWarpTime + timeToWarp * 0.8)) {
-              warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.05);
-            }
-            // second half of the jourly - the cylinder should fade out
-            else {
-              warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.00005);
-            }
-          },
+      // first half of the journey - the warp cylinder should fade in
+      if (millis() < (startWarpTime + timeToWarp * 0.8)) {
+        warpCylinder.setOpacity(warpCylinder.getOpacity() + 0.05);
+      }
+      // second half of the jourly - the cylinder should fade out
+      else {
+        warpCylinder.setOpacity(warpCylinder.getOpacity() - 0.00005);
+      }
+    },
 
-          // when the user arrives at the destination
-          function() {
-            //onPlanet = true;
-            
-            thisBox.toLand = true;
-            warpCylinder.setOpacity(0);
-             ship.scoreContainer.show();
-            console.log("DONE");
-          }
+    // when the user arrives at the destination
+    function() {
+      //onPlanet = true;
+      
+      thisBox.toLand = true;
+      warpCylinder.setOpacity(0);
+       ship.scoreContainer.show();
+      console.log("DONE");
+    }
 
-        );
+  );
 }
